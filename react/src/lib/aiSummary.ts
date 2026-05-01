@@ -141,7 +141,7 @@ export interface ChatBackend {
 export class StubChatBackend implements ChatBackend {
   isReal() { return false; }
 
-  async ask(question: string, summary: SafeSummary): Promise<string> {
+  async ask(question: string, summary: SafeSummary, _history: ChatMessage[] = []): Promise<string> {
     // Pattern-match common questions against the summary.
     const q = question.toLowerCase();
 

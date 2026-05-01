@@ -81,6 +81,7 @@ export function canRemove(actorRole: AppRole | undefined, targetRole: AppRole | 
   if (!actorRole) return false;
   if (targetRole === 'owner') return false; // owners can never be removed by others
   if (actorRole === 'owner') return true;   // owner removes anyone non-owner
-  if (actorRole === 'admin' && targetRole !== 'owner') return true;
+  // After the early-return above, targetRole is narrowed to non-'owner'
+  if (actorRole === 'admin') return true;
   return false;
 }

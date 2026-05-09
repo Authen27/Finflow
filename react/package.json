@@ -6,7 +6,7 @@
   "description": "FinFlow — Family Finance OS · React + TypeScript + Recharts",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node check-env.js && tsc -b && vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit"
   },

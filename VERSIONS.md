@@ -6,8 +6,8 @@
 
 | App | Path | Current | Live URL | Per-app changelog |
 |---|---|---|---|---|
-| **Consumer (React)** | `react/` | **v6.4.2** | https://react-taupe-xi.vercel.app | [`react/CHANGELOG.md`](react/CHANGELOG.md) |
-| **Admin** | `admin/` | **v1.0.1** | https://finflow-admin.vercel.app | [`admin/CHANGELOG.md`](admin/CHANGELOG.md) |
+| **Consumer (React)** | `react/` | **v6.4.3** | https://react-taupe-xi.vercel.app | [`react/CHANGELOG.md`](react/CHANGELOG.md) |
+| **Admin** | `admin/` | **v1.0.2** | https://finflow-admin.vercel.app | [`admin/CHANGELOG.md`](admin/CHANGELOG.md) |
 | **Vanilla shell (legacy consumer)** | `/` (root) | **v5.0** *(frozen)* | n/a — opens `index.html` directly | [§ Vanilla shell history](#vanilla-shell-history-v10--v50) below |
 
 The three apps deploy independently and are versioned independently. The vanilla shell at the repo root is kept available as the *original* FinFlow app from before the React port; it shares no code with the admin app.
@@ -20,6 +20,8 @@ Newest first. For full per-version detail, follow the link in the **App** column
 
 | Date | App | Version | Headline |
 |---|---|---|---|
+| 2026-05-20 | [Consumer](react/CHANGELOG.md#v643--split-transaction-creation--buttoninput-styling-2026-05-20) | **v6.4.3** | Split-transaction creation restored in the Add/Edit modal (participants, shares, who-paid, validation) — persists full `SplitInfo` to Supabase. Fixed undefined `btn-*`/`input` classes that made ported-page buttons render as plain text. |
+| 2026-05-20 | [Admin](admin/CHANGELOG.md#v102--brand-icon-fix-2026-05-20) | **v1.0.2** | Brand icon fix: added missing `admin/public/favicon.svg` (FinFlow Pip mark) and replaced the "FF" monogram in the sidebar with the logo-mark. |
 | 2026-05-20 | [Consumer](react/CHANGELOG.md#v642--critical-sync-fix-cloud-writes-never-persisted-2026-05-20) | **v6.4.2** | **Critical sync fix.** Cloud writes never persisted: non-UUID ids (22P02) + UPDATE-instead-of-INSERT left every locally-created record stuck in the queue. Fixed `uid()`→`crypto.randomUUID()`, adapter→real upsert, + queue guard for legacy poisoned ops. |
 | 2026-05-20 | [Admin](admin/CHANGELOG.md#v101--authgate-deadlock-hotfix-2026-05-20) | **v1.0.1** | **AuthGate deadlock hotfix.** App hung on "Checking session…" post-pause: an async `onAuthStateChange` callback awaited a nested `getUser()` and deadlocked the GoTrue auth lock. Deferred role resolution + pass session user id. |
 | 2026-05-10 | [Consumer](react/CHANGELOG.md#v641--sidebar-polish--debt--asset-form-parity-2026-05-10) | **v6.4.1** | Sidebar logo links to Dashboard. Budgets moved to PLAN, Splits moved to TRACK. Debt and Asset forms refactored to modals matching the Add Transaction / Budget / Goal pattern. |

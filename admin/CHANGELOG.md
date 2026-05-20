@@ -4,7 +4,7 @@
 >
 > The admin app is a **standalone product**, separate from the consumer app at `react/`. It shares no code with the v1.0–v5.0 vanilla shell at the repo root (which is the *consumer* legacy app). Admin's version line starts at **v1.0.0**.
 >
-> **Current production version: `v1.0.1`**
+> **Current production version: `v1.0.2`**
 > **Live URL:** https://finflow-admin.vercel.app
 > **Next planned: `v1.1.0`** (see Roadmap at the bottom).
 
@@ -17,6 +17,17 @@ That scaffolding shipped with **mock data only** (220 fake users, fake KPIs, fak
 When the data layer was sanitised — every page rewritten to read from the live Supabase project — we treated that as the **first production release** of the admin app and reset the version line accordingly. The "v8.0" label is retired.
 
 > If you see references to `"version": "8.0.0"` in `admin/package.json` in older commits, or "v8 Admin" in `CLAUDE.md` history, that was the pre-1.0 scaffolding numbering. As of v1.0.0 the package version is `1.0.0`.
+
+---
+
+## v1.0.2 — Brand icon fix *(2026-05-20)*
+
+The admin app's icon didn't match the FinFlow design.
+
+- **Missing favicon:** `admin/index.html` referenced `/favicon.svg` but there was no `admin/public/` directory, so the admin browser tab fell back to a generic icon. Added [`admin/public/favicon.svg`](admin/public/favicon.svg) — the FinFlow "Pip" peach logo-mark (coral radial gradient + sage leaf), identical to the consumer app and the vanilla shell.
+- **Sidebar wordmark:** the sidebar showed an "FF" monogram in a coral box instead of the brand logo. Replaced it with the inline Pip logo-mark SVG in [`admin/src/components/Layout.tsx`](admin/src/components/Layout.tsx) so admin branding matches the consumer.
+
+Verified: admin sidebar renders the Pip mark; favicon serves.
 
 ---
 

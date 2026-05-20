@@ -4,7 +4,7 @@
 >
 > The consumer React app at `react/` continues the version line that began with the v1.0–v5.0 vanilla-shell releases at the repo root. The vanilla shell is **frozen at v5.0** and superseded by **v6.0** (the React port). All v6+ versions are React-only.
 >
-> **Current production version: `v6.4.2`**
+> **Current production version: `v6.4.3`**
 > **Live URL:** https://react-taupe-xi.vercel.app
 > **Next planned: `v6.5`** (see Roadmap at the bottom).
 
@@ -18,6 +18,25 @@ The numbering history has some non-monotonic stretches that we keep documented h
 | v4.1 | Two distinct meanings | (a) Internal adapter refactor on the vanilla shell; (b) the cloud / auth / multi-household ship that bound the React app to Supabase. Both kept under v4.1 because the second built directly on the first and nothing was deployed between them. |
 | v6.1 | **Never shipped** | Reserved for the 7-page port-out from v5 vanilla → React. The port-out actually landed split across v6.2 (the Friction-free signup release) and v6.3 (Content + module port-out completion). |
 | v7.0 / v7.5 | Shipped before v6.2 (chronologically) | The v7.x line was a **major-feature track** (Onboarding, EMI, Recurring, Notifications, Planner, Chat) that ran in parallel with the v6.x **integration & polish track**. Going forward we abandon the parallel-track scheme — every release is on a single increasing number from v6.4 onward. |
+
+---
+
+## v6.4.3 — Split-transaction creation + button/input styling *(2026-05-20)*
+
+Two regressions vs the vanilla app, both fixed.
+
+### Split transactions can be created again
+The vanilla shell let you split a bill across participants; the React `TransactionFormModal` only *preserved* an existing `split` (`initial?.split`) — there was **no UI to create one**, so the feature was effectively missing even though the DB (`extras.split`), the `Splits` page, and `splitsOutstanding()` all supported it.
+
+- [`react/src/components/transactions/TransactionFormModal.tsx`](react/src/components/transactions/TransactionFormModal.tsx) — added a "🤝 Split this bill" section (expense only): "who paid" (you / someone else), a participants-and-shares editor (add/remove people, You is fixed), and a live "shares total vs bill" validator. On save it builds the full `SplitInfo` (`totalAmount`, `yourShare`, `paidBy`, `participants[]` with correct `paid` flags) and validates that shares sum to the bill. Editing an existing split rehydrates the form.
+- Cash-flow stays correct: `effectiveAmount()` already counts only `yourShare`; the full bill is stored as `amount` + `split.totalAmount`.
+- **Verified e2e:** created a ₹100 dinner split (You ₹50 / Alex ₹50, you paid) → persisted to `extras.split` in Supabase → Splits page shows "Owed to you ₹50.00 · 1 outstanding item".
+
+### Buttons & inputs on the ported pages now render styled
+The 7 v5-ported pages (Budgets, Goals, Debts, Net Worth, Splits, Settings) used `className="btn-primary"` / `btn-secondary` / `btn-ghost` / `input`, but **those classes were never defined** — Tailwind's preflight strips native button styling, so they rendered as plain clickable text and unstyled inputs.
+
+- [`react/src/index.css`](react/src/index.css) — added `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.btn-danger`, and `.input` to the `@layer components` block, using the Paper-Warm design tokens (coral primary, hover lift, focus ring). This fixes every Add/Edit/Delete affordance and form field across all ported pages at once.
+- **Verified:** Budgets/Goals/Debts/Net Worth now show proper coral buttons and styled inputs.
 
 ---
 

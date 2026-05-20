@@ -21,6 +21,14 @@ interface Props {
   onClose?: () => void;
 }
 
+interface SplitParticipantForm {
+  name: string;
+  share: string;
+  isYou: boolean;
+  paid: boolean;
+  paidOn?: string | null;
+}
+
 interface FormState {
   type: TxnType;
   amount: string;
@@ -33,7 +41,16 @@ interface FormState {
   paymentMethod: string;
   recurring: Recurrence | '';
   excluded: boolean;
+  // ── split ──
+  splitEnabled: boolean;
+  splitPaidBy: 'me' | 'external';
+  splitParticipants: SplitParticipantForm[];
 }
+
+const defaultParticipants = (): SplitParticipantForm[] => ([
+  { name: 'You', share: '', isYou: true,  paid: true },
+  { name: '',    share: '', isYou: false, paid: false },
+]);
 
 const blank = (currency: string): FormState => ({
   type: 'expense',
@@ -47,6 +64,9 @@ const blank = (currency: string): FormState => ({
   paymentMethod: '',
   recurring: '',
   excluded: false,
+  splitEnabled: false,
+  splitPaidBy: 'me',
+  splitParticipants: defaultParticipants(),
 });
 
 function categoriesFor(type: TxnType) {
@@ -76,9 +96,10 @@ export default function TransactionFormModal(props: Props) {
   useEffect(() => {
     if (!open) return;
     if (initial) {
+      const sp = initial.split;
       setForm({
         type: initial.type,
-        amount: String(initial.amount),
+        amount: String(sp?.isSplit ? sp.totalAmount : initial.amount),
         currency: initial.currency,
         date: initial.date,
         description: initial.description,
@@ -88,6 +109,17 @@ export default function TransactionFormModal(props: Props) {
         paymentMethod: initial.paymentMethod ?? '',
         recurring: initial.recurring ?? '',
         excluded: Boolean(initial.excluded),
+        splitEnabled: Boolean(sp?.isSplit),
+        splitPaidBy: sp?.paidBy ?? 'me',
+        splitParticipants: sp?.isSplit && sp.participants.length
+          ? sp.participants.map(p => ({
+              name: p.isYou ? 'You' : p.name,
+              share: String(p.share),
+              isYou: Boolean(p.isYou),
+              paid: p.paid,
+              paidOn: p.paidOn,
+            }))
+          : defaultParticipants(),
       });
     } else {
       setForm(blank(profile.baseCurrency));
@@ -114,6 +146,38 @@ export default function TransactionFormModal(props: Props) {
       toast('Description is required', 'error');
       return;
     }
+
+    // ── Build split info (expense only) ──
+    let split: Transaction['split'] | undefined = undefined;
+    if (form.type === 'expense' && form.splitEnabled) {
+      const parts = form.splitParticipants
+        .map(p => ({ ...p, shareNum: parseFloat(p.share) }))
+        .filter(p => (p.isYou || p.name.trim()) && !isNaN(p.shareNum) && p.shareNum >= 0);
+      const you = parts.find(p => p.isYou);
+      if (!you) { toast('A split needs your share', 'error'); return; }
+      if (parts.length < 2) { toast('A split needs at least one other participant', 'error'); return; }
+      const sumShares = parts.reduce((s, p) => s + p.shareNum, 0);
+      if (Math.abs(sumShares - amount) > 0.01) {
+        toast(`Participant shares (${sumShares.toFixed(2)}) must add up to the total bill (${amount.toFixed(2)})`, 'error');
+        return;
+      }
+      split = {
+        isSplit: true,
+        totalAmount: amount,
+        yourShare: you.shareNum,
+        paidBy: form.splitPaidBy,
+        participants: parts.map(p => ({
+          name: p.isYou ? 'You' : p.name.trim(),
+          isYou: p.isYou || undefined,
+          share: p.shareNum,
+          // If you paid, you're settled; counterparties settle later.
+          // If someone external paid, they're settled and you owe your share.
+          paid: form.splitPaidBy === 'me' ? Boolean(p.isYou || p.paid) : Boolean(!p.isYou || p.paid),
+          paidOn: p.paidOn ?? null,
+        })),
+      };
+    }
+
     setSaving(true);
     try {
       const txn: Transaction = {
@@ -133,7 +197,7 @@ export default function TransactionFormModal(props: Props) {
         linkedAssetId: initial?.linkedAssetId,
         linkedDebtId:  initial?.linkedDebtId,
         linkedTxnId:   initial?.linkedTxnId,
-        split:         initial?.split,
+        split,
       };
       await upsertTransaction(txn);
       toast(initial ? 'Transaction updated' : 'Transaction added', 'success');
@@ -239,7 +303,7 @@ export default function TransactionFormModal(props: Props) {
         </Field>
       </FieldRow>
 
-      <label className="flex items-center gap-2 mb-4 text-[0.84rem] text-ink-mid cursor-pointer select-none">
+      <label className="flex items-center gap-2 mb-3 text-[0.84rem] text-ink-mid cursor-pointer select-none">
         <input
           type="checkbox"
           checked={form.excluded}
@@ -247,6 +311,90 @@ export default function TransactionFormModal(props: Props) {
         />
         <span>🔒 Private — exclude from totals, charts and Pulse Score</span>
       </label>
+
+      {/* ── Split a bill (expense only) ── */}
+      {form.type === 'expense' && (
+        <div className="mb-4 border border-line rounded-lg overflow-hidden">
+          <label className="flex items-center gap-2 px-3 py-2.5 bg-bg3 text-[0.84rem] text-ink cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={form.splitEnabled}
+              onChange={e => setForm(f => ({ ...f, splitEnabled: e.target.checked }))}
+            />
+            <span>🤝 Split this bill with others</span>
+          </label>
+
+          {form.splitEnabled && (
+            <div className="p-3 space-y-3">
+              <Field label="Who paid the bill?">
+                <Select
+                  value={form.splitPaidBy}
+                  onChange={e => setForm(f => ({ ...f, splitPaidBy: e.target.value as 'me' | 'external' }))}
+                >
+                  <option value="me">You paid — others owe you</option>
+                  <option value="external">Someone else paid — you owe your share</option>
+                </Select>
+              </Field>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="mono-label">Participants &amp; shares ({form.currency})</label>
+                  <button
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, splitParticipants: [...f.splitParticipants, { name: '', share: '', isYou: false, paid: false }] }))}
+                    className="font-mono text-[0.6rem] tracking-wider uppercase text-coral hover:underline"
+                  >
+                    + Add person
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  {form.splitParticipants.map((p, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <input
+                        className="input flex-1 py-1.5"
+                        value={p.isYou ? 'You' : p.name}
+                        disabled={p.isYou}
+                        placeholder="Name"
+                        onChange={e => setForm(f => ({ ...f, splitParticipants: f.splitParticipants.map((x, j) => j === i ? { ...x, name: e.target.value } : x) }))}
+                      />
+                      <input
+                        className="input w-28 py-1.5 text-right"
+                        type="number" min="0" step="0.01"
+                        value={p.share}
+                        placeholder="0.00"
+                        onChange={e => setForm(f => ({ ...f, splitParticipants: f.splitParticipants.map((x, j) => j === i ? { ...x, share: e.target.value } : x) }))}
+                      />
+                      {!p.isYou ? (
+                        <button
+                          type="button"
+                          onClick={() => setForm(f => ({ ...f, splitParticipants: f.splitParticipants.filter((_, j) => j !== i) }))}
+                          className="text-ink-dim hover:text-terra w-7 flex-shrink-0 text-center"
+                          aria-label="Remove participant"
+                        >✕</button>
+                      ) : <span className="w-7 flex-shrink-0" />}
+                    </div>
+                  ))}
+                </div>
+                {/* Running total vs bill */}
+                {(() => {
+                  const bill = parseFloat(form.amount) || 0;
+                  const sum = form.splitParticipants.reduce((s, p) => s + (parseFloat(p.share) || 0), 0);
+                  const ok = Math.abs(sum - bill) < 0.01 && bill > 0;
+                  return (
+                    <div className={`mt-2 font-mono text-[0.62rem] tracking-wider ${ok ? 'text-sage' : 'text-honey'}`}>
+                      Shares total {sum.toFixed(2)} / bill {bill.toFixed(2)} {ok ? '✓' : '— must match'}
+                    </div>
+                  );
+                })()}
+                <p className="mt-1.5 text-[0.7rem] text-ink-dim leading-snug">
+                  The <strong>Amount</strong> above is the full bill. Only your share counts toward your
+                  expenses; the rest is tracked as IOUs on the Splits page.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-2">
         {initial ? (

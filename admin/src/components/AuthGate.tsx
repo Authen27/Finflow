@@ -100,7 +100,7 @@ function SignInPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-7">
           <div className="display-serif text-3xl text-claude leading-none">FinFlow</div>
-          <div className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-ink-dim mt-1.5">Admin Console · v1.0.1</div>
+          <div className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-ink-dim mt-1.5">Admin Console · v1.0.2</div>
         </div>
         <form onSubmit={onSubmit} className="panel p-6 space-y-3">
           <div>

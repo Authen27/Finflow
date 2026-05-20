@@ -152,4 +152,91 @@ body::before {
     border-radius: 8px;
     box-shadow: 0 2px 6px hsl(var(--shadow) / .06);
   }
+
+  /* ── Buttons ──────────────────────────────────────────────────
+     The ported pages (Budgets, Goals, Debts, Net Worth, Splits,
+     Settings) use these semantic classes. Tailwind's preflight strips
+     native button styling, so without these definitions the buttons
+     render as plain clickable text. */
+  .btn-primary, .btn-secondary, .btn-ghost, .btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+    font-family: 'Inter Tight', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    line-height: 1;
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .btn-primary:disabled, .btn-secondary:disabled,
+  .btn-ghost:disabled, .btn-danger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-primary {
+    background: hsl(var(--coral));
+    color: hsl(var(--primary-text));
+    box-shadow: 0 1px 3px hsl(var(--shadow) / .12);
+  }
+  .btn-primary:hover:not(:disabled) {
+    filter: brightness(1.07);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px hsl(var(--shadow) / .18);
+  }
+  .btn-primary:active:not(:disabled) { transform: translateY(0); }
+  .btn-secondary {
+    background: hsl(var(--bg3));
+    color: hsl(var(--ink));
+    border-color: hsl(var(--line));
+  }
+  .btn-secondary:hover:not(:disabled) {
+    border-color: hsl(var(--coral));
+    color: hsl(var(--coral));
+  }
+  .btn-ghost {
+    background: transparent;
+    color: hsl(var(--ink-mid));
+    border-color: hsl(var(--line));
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: hsl(var(--bg3));
+    color: hsl(var(--ink));
+    border-color: hsl(var(--line2));
+  }
+  .btn-danger {
+    background: transparent;
+    color: hsl(var(--terra));
+    border-color: hsl(var(--line));
+  }
+  .btn-danger:hover:not(:disabled) {
+    background: hsl(var(--coral-tint));
+    border-color: hsl(var(--terra));
+  }
+
+  /* ── Form inputs ──────────────────────────────────────────────
+     Same story: ported pages use className="input". */
+  .input {
+    width: 100%;
+    background: hsl(var(--bg3));
+    border: 1px solid hsl(var(--line));
+    color: hsl(var(--ink));
+    border-radius: 8px;
+    padding: 0.55rem 0.75rem;
+    font-family: 'Inter Tight', system-ui, sans-serif;
+    font-size: 0.86rem;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .input::placeholder { color: hsl(var(--ink-dim)); }
+  .input:focus {
+    border-color: hsl(var(--coral));
+    box-shadow: 0 0 0 2px hsl(var(--coral) / .2);
+  }
 }

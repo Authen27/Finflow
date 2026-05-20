@@ -46,10 +46,19 @@ export default function Layout({ children }: { children: ReactNode }) {
       <aside className="hidden lg:flex flex-col w-60 bg-surface border-r border-line">
         <div className="px-5 py-5 border-b border-line">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-md bg-claude flex items-center justify-center text-white font-mono font-bold text-sm">FF</div>
+            <svg viewBox="0 0 36 36" width={32} height={32} className="flex-shrink-0">
+              <defs>
+                <radialGradient id="ff-logo-grad" cx="50%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="#F4B6A8" />
+                  <stop offset="100%" stopColor="#E26D5C" />
+                </radialGradient>
+              </defs>
+              <path d="M18 3 C 27 3, 33 9, 33 18 C 33 27, 27 33, 18 33 C 9 33, 3 27, 3 18 C 3 9, 9 3, 18 3 Z" fill="url(#ff-logo-grad)" stroke="#2A2522" strokeWidth="1.2" />
+              <path d="M18 3 Q 16 -1, 14 1 Q 17 3, 18 3 Z" fill="#85A88A" stroke="#2A2522" strokeWidth="0.8" />
+            </svg>
             <div>
               <div className="display-serif text-lg leading-none">FinFlow</div>
-              <div className="font-mono text-[0.55rem] tracking-[0.18em] uppercase text-ink-dim mt-0.5">Admin · v1.0.1</div>
+              <div className="font-mono text-[0.55rem] tracking-[0.18em] uppercase text-ink-dim mt-0.5">Admin · v1.0.2</div>
             </div>
           </Link>
         </div>

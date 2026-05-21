@@ -4,7 +4,7 @@
 >
 > The consumer React app at `react/` continues the version line that began with the v1.0–v5.0 vanilla-shell releases at the repo root. The vanilla shell is **frozen at v5.0** and superseded by **v6.0** (the React port). All v6+ versions are React-only.
 >
-> **Current production version: `v6.4.3`**
+> **Current production version: `v6.4.4`**
 > **Live URL:** https://react-taupe-xi.vercel.app
 > **Next planned: `v6.5`** (see Roadmap at the bottom).
 
@@ -18,6 +18,27 @@ The numbering history has some non-monotonic stretches that we keep documented h
 | v4.1 | Two distinct meanings | (a) Internal adapter refactor on the vanilla shell; (b) the cloud / auth / multi-household ship that bound the React app to Supabase. Both kept under v4.1 because the second built directly on the first and nothing was deployed between them. |
 | v6.1 | **Never shipped** | Reserved for the 7-page port-out from v5 vanilla → React. The port-out actually landed split across v6.2 (the Friction-free signup release) and v6.3 (Content + module port-out completion). |
 | v7.0 / v7.5 | Shipped before v6.2 (chronologically) | The v7.x line was a **major-feature track** (Onboarding, EMI, Recurring, Notifications, Planner, Chat) that ran in parallel with the v6.x **integration & polish track**. Going forward we abandon the parallel-track scheme — every release is on a single increasing number from v6.4 onward. |
+
+---
+
+## v6.4.4 — FinFlow Design System v2 alignment *(2026-05-21)*
+
+Adopted the **FinFlow Design System v2** handoff from claude.ai/design (tokens.css + lib.jsx `FF.*` specs). Visual/styling only — no behaviour or data changes.
+
+### Tokens
+- Injected the full `--ff-*` token set into [`react/src/index.css`](react/src/index.css): warm-paper surfaces (canvas / surface / shell), 4-step ink scale (`ink` → `ink-4`), line steps (`line` / `line-2` / `line-strong`), coral brand ramp (coral / soft / tint / deep / deep-tint), semantic colours + tints (sage, olive, honey, butter, denim, plum), the type scale, radii (4/6/8/14/20/pill), paper-soft shadows (1–4), and motion eases/durations. Added a dark-theme remap so the tokens stay correct in dark mode.
+
+### Components (matched to `lib.jsx` FF specs)
+- **Buttons** — radius **9px**, weight 600, 5 kinds: `primary` (coral), `ink` (dark solid), `ghost` (outline), `secondary`/`subtle` (surface fill), `danger`/`destruct` (terracotta) + `.btn-sm` / `.btn-lg` size modifiers.
+- **Inputs** — height 40, radius 8, surface bg, line-2 border, coral focus ring; textareas/selects keep auto height.
+- **Cards** — `.panel` now matches `FF.Card` (surface bg, `--ff-line` border, r8, shadow-1).
+- `.mono-label` (mono 10px / 0.14em / ink-3) and `.display-italic` (serif) aligned.
+
+### Brand — Pip + wordmark
+- **Pip mascot** upgraded from the simplified circle to the real design-system character — coral radial-gradient body, **eyes, cheeks, and a smile** — in the consumer Sidebar, MobileBar, and `public/favicon.svg`.
+- **Wordmark** now renders **"Fin" upright + "Flow" italic in coral** (Newsreader serif, weight 500, -0.015em) per the FF.Wordmark spec, replacing the all-italic treatment.
+
+Verified in-browser: sidebar shows the faced Pip + Fin*Flow* wordmark, coral FF buttons, paper-warm cards.
 
 ---
 

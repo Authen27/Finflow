@@ -24,8 +24,9 @@ export default function MobileBar({ onMenu }: Props) {
       >
         <Menu size={18} strokeWidth={1.5} />
       </button>
-      <div className="display-italic text-xl text-ink leading-none">
-        Fin<span className="text-coral">Flow</span>
+      <div className="text-xl text-ink leading-none"
+           style={{ fontFamily: 'var(--ff-serif)', fontWeight: 500, letterSpacing: '-0.015em' }}>
+        Fin<span style={{ fontStyle: 'italic', color: 'var(--ff-coral)' }}>Flow</span>
       </div>
       <div className="flex items-center gap-1">
         <NotificationCenter />

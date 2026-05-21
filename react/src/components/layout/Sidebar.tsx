@@ -69,8 +69,9 @@ export default function Sidebar({ open, onClose }: Props) {
             title="Dashboard"
           >
             <Logo />
-            <div className="display-italic text-2xl text-ink leading-none flex-1 group-hover:text-ink">
-              Fin<span className="text-coral">Flow</span>
+            <div className="text-2xl text-ink leading-none flex-1 group-hover:text-ink"
+                 style={{ fontFamily: 'var(--ff-serif)', fontWeight: 500, letterSpacing: '-0.015em' }}>
+              Fin<span style={{ fontStyle: 'italic', color: 'var(--ff-coral)' }}>Flow</span>
             </div>
           </Link>
           <div className="hidden lg:block"><NotificationCenter /></div>
@@ -179,6 +180,11 @@ function Logo() {
         </radialGradient>
       </defs>
       <path d="M18 3 C 27 3, 33 9, 33 18 C 33 27, 27 33, 18 33 C 9 33, 3 27, 3 18 C 3 9, 9 3, 18 3 Z" fill="url(#logo-grad)" stroke="#2A2522" strokeWidth="1.2" />
+      <ellipse cx="13" cy="16" rx="1.4" ry="1.8" fill="#2A2522" />
+      <ellipse cx="23" cy="16" rx="1.4" ry="1.8" fill="#2A2522" />
+      <circle cx="9.5" cy="20" r="1.6" fill="#F4B6A8" opacity="0.8" />
+      <circle cx="26.5" cy="20" r="1.6" fill="#F4B6A8" opacity="0.8" />
+      <path d="M14 22 Q 18 25, 22 22" stroke="#2A2522" strokeWidth="1.2" fill="none" strokeLinecap="round" />
       <path d="M18 3 Q 16 -1, 14 1 Q 17 3, 18 3 Z" fill="#85A88A" stroke="#2A2522" strokeWidth="0.8" />
     </svg>
   );

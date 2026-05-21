@@ -64,7 +64,7 @@ export default function Settings() {
 
   function downloadBackup() {
     const backup = {
-      version: '6.4.3', exported: today(),
+      version: '6.4.4', exported: today(),
       profile, transactions, budgets, goals, members, debts, assets,
       exchangeRates: rates,
     };

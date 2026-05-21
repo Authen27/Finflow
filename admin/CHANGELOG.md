@@ -4,7 +4,7 @@
 >
 > The admin app is a **standalone product**, separate from the consumer app at `react/`. It shares no code with the v1.0–v5.0 vanilla shell at the repo root (which is the *consumer* legacy app). Admin's version line starts at **v1.0.0**.
 >
-> **Current production version: `v1.0.2`**
+> **Current production version: `v1.0.3`**
 > **Live URL:** https://finflow-admin.vercel.app
 > **Next planned: `v1.1.0`** (see Roadmap at the bottom).
 
@@ -17,6 +17,16 @@ That scaffolding shipped with **mock data only** (220 fake users, fake KPIs, fak
 When the data layer was sanitised — every page rewritten to read from the live Supabase project — we treated that as the **first production release** of the admin app and reset the version line accordingly. The "v8.0" label is retired.
 
 > If you see references to `"version": "8.0.0"` in `admin/package.json` in older commits, or "v8 Admin" in `CLAUDE.md` history, that was the pre-1.0 scaffolding numbering. As of v1.0.0 the package version is `1.0.0`.
+
+---
+
+## v1.0.3 — Design System v2 brand marks *(2026-05-21)*
+
+Aligned the admin to the FinFlow Design System v2 brand:
+- Sidebar logo and `admin/public/favicon.svg` upgraded to the full **Pip mascot** (eyes, cheeks, smile), matching the consumer.
+- Sidebar wordmark now renders **"Fin" upright + "Flow" italic coral** per the FF.Wordmark spec.
+
+> The design system shows the admin on a dark "shell" theme (`#1F1B17`); the admin currently remains on its light Claude-native theme pending product sign-off. Token/shell adoption is tracked for a later release.
 
 ---
 

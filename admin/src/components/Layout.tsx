@@ -54,11 +54,18 @@ export default function Layout({ children }: { children: ReactNode }) {
                 </radialGradient>
               </defs>
               <path d="M18 3 C 27 3, 33 9, 33 18 C 33 27, 27 33, 18 33 C 9 33, 3 27, 3 18 C 3 9, 9 3, 18 3 Z" fill="url(#ff-logo-grad)" stroke="#2A2522" strokeWidth="1.2" />
+              <ellipse cx="13" cy="16" rx="1.4" ry="1.8" fill="#2A2522" />
+              <ellipse cx="23" cy="16" rx="1.4" ry="1.8" fill="#2A2522" />
+              <circle cx="9.5" cy="20" r="1.6" fill="#F4B6A8" opacity="0.8" />
+              <circle cx="26.5" cy="20" r="1.6" fill="#F4B6A8" opacity="0.8" />
+              <path d="M14 22 Q 18 25, 22 22" stroke="#2A2522" strokeWidth="1.2" fill="none" strokeLinecap="round" />
               <path d="M18 3 Q 16 -1, 14 1 Q 17 3, 18 3 Z" fill="#85A88A" stroke="#2A2522" strokeWidth="0.8" />
             </svg>
             <div>
-              <div className="display-serif text-lg leading-none">FinFlow</div>
-              <div className="font-mono text-[0.55rem] tracking-[0.18em] uppercase text-ink-dim mt-0.5">Admin · v1.0.2</div>
+              <div className="text-lg leading-none" style={{ fontFamily: 'var(--ff-serif, Georgia)', fontWeight: 500, letterSpacing: '-0.015em' }}>
+                Fin<span style={{ fontStyle: 'italic', color: '#E26D5C' }}>Flow</span>
+              </div>
+              <div className="font-mono text-[0.55rem] tracking-[0.18em] uppercase text-ink-dim mt-0.5">Admin · v1.0.3</div>
             </div>
           </Link>
         </div>

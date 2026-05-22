@@ -19,5 +19,6 @@
     "paths": { "@/*": ["src/*"] }
   },
   "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "e2e"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -26,6 +26,8 @@ jobs:
       - run: npm ci
       - name: Type-check
         run: npm run lint
+      - name: Unit tests (vitest)
+        run: npm test
       - name: Build
         run: npm run build
         env:
@@ -38,6 +40,30 @@ jobs:
         with:
           name: consumer-dist
           path: react/dist
+          retention-days: 7
+
+  e2e:
+    name: E2E — Lane A (local-only)
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: react } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: react/package-lock.json
+      - run: npm ci
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: Run E2E (builds + serves in local-only mode automatically)
+        run: npm run e2e
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: react/playwright-report
           retention-days: 7
 
   admin:

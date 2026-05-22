@@ -13,6 +13,7 @@ import {
 } from './calculations';
 import { nowMonthKey, getMonthKey } from './format';
 
+
 // The structure sent to the LLM. NO PII. NO descriptions.
 export interface SafeSummary {
   asOf: string;                          // ISO date
@@ -41,6 +42,90 @@ export interface SafeSummary {
   goals:   { type: string; targetPct: number; daysToDeadline: number | null }[];
   debts:   { type: string; balance: number; aprPct: number; monthsRemaining?: number }[];
 }
+
+// --- Sub-agent interface and registry ---
+export interface SubAgent {
+  id: string;
+  canHandle: (question: string) => boolean;
+  handle: (question: string, summary: SafeSummary, history: ChatMessage[]) => Promise<string>;
+}
+
+const subAgents: SubAgent[] = [];
+
+export function registerSubAgent(agent: SubAgent) {
+  subAgents.push(agent);
+}
+
+// Intent-based router
+async function routeToSubAgent(question: string, summary: SafeSummary, history: ChatMessage[]): Promise<string> {
+  const agent = subAgents.find(a => a.canHandle(question));
+  if (agent) return agent.handle(question, summary, history);
+  // fallback to default stub
+  return defaultStubAgent.handle(question, summary, history);
+}
+
+// No specialised sub-agents are registered yet — every question falls through to
+// the data-driven defaultStubAgent below. Register real ones here when wired (v8).
+
+// --- Default stub agent (pattern-matcher, as before) ---
+const defaultStubAgent: SubAgent = {
+  id: 'default',
+  canHandle: () => true,
+  async handle(question, summary, history) {
+    // Pattern-match common questions against the summary.
+    const q = question.toLowerCase();
+
+    if (/(spend|spent|spending).*month/.test(q) || /this month/.test(q)) {
+      return `This month (${summary.thisMonth.monthKey}) you've spent ${formatMoney(summary.thisMonth.expense, summary.baseCurrency)} ` +
+        `against ${formatMoney(summary.thisMonth.income, summary.baseCurrency)} of income  a ` +
+        `${(summary.thisMonth.netSavingsRate * 100).toFixed(0)}% savings rate. ` +
+        `Your top expense categories: ${summary.thisMonth.topCategories.slice(0, 3).map(c => c.category).join(', ')}.`;
+    }
+    if (/pulse|score/.test(q)) {
+      const c = summary.pulseScore.components;
+      return `Your Family Pulse Score is ${summary.pulseScore.total}/100. ` +
+        `Components: Budgets ${c.budget}, Savings ${c.savings}, Goals ${c.goals}, Trend ${c.trend}, Debt ${c.debt}. ` +
+        `${summary.pulseScore.total >= 80 ? 'Excellent  keep it going.' : summary.pulseScore.total >= 65 ? 'Good  small wins compound.' : 'Room to improve. Check the Planner page for prioritised recommendations.'}`;
+    }
+    if (/net.*worth|wealth/.test(q)) {
+      return `Net worth: ${formatMoney(summary.netWorth.netWorth, summary.baseCurrency)}. ` +
+        `Assets ${formatMoney(summary.netWorth.totalAssets, summary.baseCurrency)} minus ` +
+        `Liabilities ${formatMoney(summary.netWorth.totalLiabilities, summary.baseCurrency)}. ` +
+        `Liquidity coverage: ${summary.netWorth.liquidityMonths.toFixed(1)} months of expenses. ` +
+        `Debt-to-asset: ${summary.netWorth.debtToAssetPct.toFixed(0)}%.`;
+    }
+    if (/emergency|fund|savings goal/.test(q)) {
+      const eg = summary.goals.find(g => g.type === 'emergency');
+      if (eg) return `Your emergency fund is ${eg.targetPct.toFixed(0)}% complete. ${eg.daysToDeadline !== null ? `${eg.daysToDeadline} days to deadline.` : ''}`;
+      return 'No emergency fund tracked. The standard recommendation: 36 months of expenses in liquid savings.';
+    }
+    if (/debt|owe|loan/.test(q)) {
+      if (!summary.debts.length) return "You're debt-free  no debts tracked.";
+      const total = summary.debts.reduce((s, d) => s + d.balance, 0);
+      const highApr = summary.debts.sort((a, b) => b.aprPct - a.aprPct)[0];
+      return `Total debt: ${formatMoney(total, summary.baseCurrency)} across ${summary.debts.length} accounts. ` +
+        `Highest APR: ${highApr.type} at ${highApr.aprPct}% (${formatMoney(highApr.balance, summary.baseCurrency)}). ` +
+        `Avalanche strategy targets this debt first.`;
+    }
+    if (/budget/.test(q)) {
+      const over = summary.budgets.filter(b => b.spentPct > 100);
+      const near = summary.budgets.filter(b => b.spentPct > 80 && b.spentPct <= 100);
+      if (over.length) return `${over.length} budgets exceeded this month: ${over.map(b => b.category).join(', ')}.`;
+      if (near.length) return `${near.length} budgets near their limit: ${near.map(b => b.category).join(', ')}.`;
+      return `All ${summary.budgets.length} budgets are on track this month.`;
+    }
+    if (/help|what.*ask/.test(q)) {
+      return `I can answer questions about your spending, savings rate, Pulse Score, net worth, debts, and goals. Try: "How much did I spend this month?" or "What's my net worth?"`;
+    }
+
+    // Generic fallback summary
+    return `(stub mode · backend not yet wired) ` +
+      `This month: ${formatMoney(summary.thisMonth.income, summary.baseCurrency)} in, ${formatMoney(summary.thisMonth.expense, summary.baseCurrency)} out. ` +
+      `Pulse Score: ${summary.pulseScore.total}/100. ` +
+      `When the Supabase Edge Function lands in v8, this will route through Claude Haiku and answer richer questions.`;
+  }
+};
+
 
 export function buildSafeSummary(
   txns: Transaction[], budgets: Budget[], goals: Goal[],
@@ -138,61 +223,12 @@ export interface ChatBackend {
   isReal(): boolean;  // false = stub, true = real backend wired
 }
 
+
 export class StubChatBackend implements ChatBackend {
   isReal() { return false; }
 
-  async ask(question: string, summary: SafeSummary, _history: ChatMessage[] = []): Promise<string> {
-    // Pattern-match common questions against the summary.
-    const q = question.toLowerCase();
-
-    if (/(spend|spent|spending).*month/.test(q) || /this month/.test(q)) {
-      return `This month (${summary.thisMonth.monthKey}) you've spent ${formatMoney(summary.thisMonth.expense, summary.baseCurrency)} ` +
-        `against ${formatMoney(summary.thisMonth.income, summary.baseCurrency)} of income — a ` +
-        `${(summary.thisMonth.netSavingsRate * 100).toFixed(0)}% savings rate. ` +
-        `Your top expense categories: ${summary.thisMonth.topCategories.slice(0, 3).map(c => c.category).join(', ')}.`;
-    }
-    if (/pulse|score/.test(q)) {
-      const c = summary.pulseScore.components;
-      return `Your Family Pulse Score is ${summary.pulseScore.total}/100. ` +
-        `Components: Budgets ${c.budget}, Savings ${c.savings}, Goals ${c.goals}, Trend ${c.trend}, Debt ${c.debt}. ` +
-        `${summary.pulseScore.total >= 80 ? 'Excellent — keep it going.' : summary.pulseScore.total >= 65 ? 'Good — small wins compound.' : 'Room to improve. Check the Planner page for prioritised recommendations.'}`;
-    }
-    if (/net.*worth|wealth/.test(q)) {
-      return `Net worth: ${formatMoney(summary.netWorth.netWorth, summary.baseCurrency)}. ` +
-        `Assets ${formatMoney(summary.netWorth.totalAssets, summary.baseCurrency)} minus ` +
-        `Liabilities ${formatMoney(summary.netWorth.totalLiabilities, summary.baseCurrency)}. ` +
-        `Liquidity coverage: ${summary.netWorth.liquidityMonths.toFixed(1)} months of expenses. ` +
-        `Debt-to-asset: ${summary.netWorth.debtToAssetPct.toFixed(0)}%.`;
-    }
-    if (/emergency|fund|savings goal/.test(q)) {
-      const eg = summary.goals.find(g => g.type === 'emergency');
-      if (eg) return `Your emergency fund is ${eg.targetPct.toFixed(0)}% complete. ${eg.daysToDeadline !== null ? `${eg.daysToDeadline} days to deadline.` : ''}`;
-      return 'No emergency fund tracked. The standard recommendation: 3–6 months of expenses in liquid savings.';
-    }
-    if (/debt|owe|loan/.test(q)) {
-      if (!summary.debts.length) return "You're debt-free — no debts tracked.";
-      const total = summary.debts.reduce((s, d) => s + d.balance, 0);
-      const highApr = summary.debts.sort((a, b) => b.aprPct - a.aprPct)[0];
-      return `Total debt: ${formatMoney(total, summary.baseCurrency)} across ${summary.debts.length} accounts. ` +
-        `Highest APR: ${highApr.type} at ${highApr.aprPct}% (${formatMoney(highApr.balance, summary.baseCurrency)}). ` +
-        `Avalanche strategy targets this debt first.`;
-    }
-    if (/budget/.test(q)) {
-      const over = summary.budgets.filter(b => b.spentPct > 100);
-      const near = summary.budgets.filter(b => b.spentPct > 80 && b.spentPct <= 100);
-      if (over.length) return `${over.length} budgets exceeded this month: ${over.map(b => b.category).join(', ')}.`;
-      if (near.length) return `${near.length} budgets near their limit: ${near.map(b => b.category).join(', ')}.`;
-      return `All ${summary.budgets.length} budgets are on track this month.`;
-    }
-    if (/help|what.*ask/.test(q)) {
-      return `I can answer questions about your spending, savings rate, Pulse Score, net worth, debts, and goals. Try: "How much did I spend this month?" or "What's my net worth?"`;
-    }
-
-    // Generic fallback summary
-    return `(stub mode · backend not yet wired) ` +
-      `This month: ${formatMoney(summary.thisMonth.income, summary.baseCurrency)} in, ${formatMoney(summary.thisMonth.expense, summary.baseCurrency)} out. ` +
-      `Pulse Score: ${summary.pulseScore.total}/100. ` +
-      `When the Supabase Edge Function lands in v8, this will route through Claude Haiku and answer richer questions.`;
+  async ask(question: string, summary: SafeSummary, history: ChatMessage[] = []): Promise<string> {
+    return routeToSubAgent(question, summary, history);
   }
 }
 

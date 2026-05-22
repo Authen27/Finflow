@@ -4,7 +4,7 @@
 >
 > The consumer React app at `react/` continues the version line that began with the v1.0–v5.0 vanilla-shell releases at the repo root. The vanilla shell is **frozen at v5.0** and superseded by **v6.0** (the React port). All v6+ versions are React-only.
 >
-> **Current production version: `v6.4.5`**
+> **Current production version: `v6.4.6`**
 > **Live URL:** https://react-taupe-xi.vercel.app
 > **Next planned: `v6.5`** (see Roadmap at the bottom).
 
@@ -18,6 +18,35 @@ The numbering history has some non-monotonic stretches that we keep documented h
 | v4.1 | Two distinct meanings | (a) Internal adapter refactor on the vanilla shell; (b) the cloud / auth / multi-household ship that bound the React app to Supabase. Both kept under v4.1 because the second built directly on the first and nothing was deployed between them. |
 | v6.1 | **Never shipped** | Reserved for the 7-page port-out from v5 vanilla → React. The port-out actually landed split across v6.2 (the Friction-free signup release) and v6.3 (Content + module port-out completion). |
 | v7.0 / v7.5 | Shipped before v6.2 (chronologically) | The v7.x line was a **major-feature track** (Onboarding, EMI, Recurring, Notifications, Planner, Chat) that ran in parallel with the v6.x **integration & polish track**. Going forward we abandon the parallel-track scheme — every release is on a single increasing number from v6.4 onward. |
+
+---
+
+
+## v6.4.6 — Linked accounts, dynamic needs/wants, AI usage metrics, split-bill UX *(2026-05-21)*
+
+A feature release plus a stabilisation pass. **Two files (`TransactionFormModal`, `NetWorth`) had shipped in a non-compiling state in an earlier v6.4.6 draft** — both were reconstructed cleanly, the build is green again, and the intended features were re-implemented correctly.
+
+### Build stabilisation (regressions fixed)
+- `TransactionFormModal.tsx` had been corrupted (split-bill JSX pasted at module top-level, imports/interfaces/component signature deleted). Rebuilt from the v6.4.5 base.
+- `NetWorth.tsx` had a temporal-dead-zone crash (an effect referencing `assets`/`toast` before declaration) plus type errors (`includes(undefined)`, invalid toast kind `'warn'`). Effect moved below declarations, runs once per mount, kind corrected to `'warning'`.
+- `aiSummary.ts` — removed unwired stub sub-agents that intercepted "how can I save / insights" questions and returned canned `(stub)` text instead of the real data-driven answers.
+
+### Linked accounts drive payments — [`react/src/lib/accounts.ts`](react/src/lib/accounts.ts)
+- A user's spendable accounts are now derived from **Net Worth**: cash + bank assets (`cash`/`checking`/`savings`) + credit-card debts. The Add-Transaction **Account** dropdown lists exactly these (encoded as `cash` / `asset:<id>` / `debt:<id>`).
+- Expense, income and transfer now **require** an account. Legacy `PAYMENT_METHODS` values still resolve for display so historical rows are never lost. `PaymentMethodChip` resolves all three forms.
+
+### Dynamic needs/wants categorisation — [`react/src/lib/categorization.ts`](react/src/lib/categorization.ts)
+- The need/want mapping now lives in the **`category_classifications`** DB table (admin-editable, globally read), with the static `NEEDS_WANTS_MAP` as offline fallback. Reports' Needs-vs-Wants panel reads the live mapping.
+
+### AI usage metrics — [`react/src/lib/aiUsage.ts`](react/src/lib/aiUsage.ts)
+- Each Ask-FinFlow message is classified for **intent** + **sentiment** locally and logged to the **`ai_usage`** table. Privacy-first: only intent, sentiment and message length are stored — never message content. Surfaced for the business in the admin app's new AI Intelligence page.
+
+### Split-bill UX & recurring modal
+- Split editor: auto-equal split, one-click add/remove participants, Backspace/Delete on an empty row removes it, and live validation messages.
+- `Recurring.tsx`: schedules are now fully editable (pre-filled on edit) with graceful empty/invalid day-of-month handling.
+
+### Schema (additive, non-destructive)
+- New tables `category_classifications` and `ai_usage` (RLS via `is_member` / `is_admin`), plus the `admin_ai_usage_summary()` SECURITY DEFINER RPC for the admin dashboard.
 
 ---
 
@@ -622,3 +651,20 @@ Full detail kept at the root [`VERSIONS.md`](../VERSIONS.md). Summary:
 - Multi-device push notifications via Web Push (already partially wired in v7.0).
 
 > The major-feature track that ran as v7.0 / v7.5 in parallel with the v6.x integration track is being **collapsed** going forward. Every release from v6.4 onward is on a single increasing version line.
+
+## v6.5.0 — AI agent sub-agent architecture, functional fixes *(2026-05-21)*
+
+### AI agent extensibility
+- Refactored AI agent to support sub-agent registration and intent-based routing ([react/src/lib/aiSummary.ts](react/src/lib/aiSummary.ts)).
+- Added sub-agent interface and registry; stub sub-agents for recommendations and insights.
+- All Chat queries now routed through sub-agents, enabling future extensibility for insights, recommendations, and more.
+
+### Functional/UX fixes (planned for this release)
+- Category selection now context-aware by transaction type (Expense, Income, Transfer).
+- Payment method selection restricted to Cash and user-linked accounts/cards; overspend alerts and card/account limit enforcement added.
+- Reports now break down spending by "needs" vs "wants" (category mapping).
+- Fixed day-of-month input bug in recurring payments (single-digit deletion/editing).
+- Recurring schedules are now fully editable.
+- Split bill UX defaults to equal shares, manual input optional.
+
+> This release lays the foundation for richer AI-driven features and closes several functional gaps in the transaction and recurring flows.

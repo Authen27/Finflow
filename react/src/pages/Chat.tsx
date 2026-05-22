@@ -6,6 +6,7 @@ import Button from '../components/ui/Button';
 import {
   buildSafeSummary, StubChatBackend, type ChatMessage,
 } from '../lib/aiSummary';
+import { logAiUsage } from '../lib/aiUsage';
 
 const SUGGESTED = [
   'How much did I spend this month?',
@@ -27,6 +28,7 @@ export default function Chat() {
   const profile = useStore(s => s.profile);
   const rates   = useStore(s => s.rates);
   const members = useStore(s => s.members);
+  const householdId = useStore(s => s.currentHouseholdId);
 
   const [history, setHistory] = useState<ChatMessage[]>(() => {
     try { return JSON.parse(localStorage.getItem('ff_chat_history') || '[]'); }
@@ -54,6 +56,9 @@ export default function Chat() {
     setHistory(h => [...h, userMsg]);
     setInput('');
     setThinking(true);
+
+    // Privacy-safe usage metric (intent + sentiment only, no message text).
+    void logAiUsage({ householdId, text: question, surface: 'chat' });
 
     try {
       const answer = await backend.ask(question, summary, history);

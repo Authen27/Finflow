@@ -4,9 +4,20 @@
 >
 > The admin app is a **standalone product**, separate from the consumer app at `react/`. It shares no code with the v1.0–v5.0 vanilla shell at the repo root (which is the *consumer* legacy app). Admin's version line starts at **v1.0.0**.
 >
-> **Current production version: `v1.0.3`**
+> **Current production version: `v1.0.4`**
 > **Live URL:** https://finflow-admin.vercel.app
 > **Next planned: `v1.1.0`** (see Roadmap at the bottom).
+
+---
+
+## v1.0.4 — AI Assistant Intelligence *(2026-05-21)*
+
+New **AI Intelligence** page (super, roles & content tiers) that segments user types from Ask-FinFlow usage.
+
+- [`admin/src/pages/Intelligence.tsx`](admin/src/pages/Intelligence.tsx) — intent distribution, sentiment split, and a per-user segment table (Power user · advocate / · frustrated, At-risk, Engaged, Casual). Privacy-safe: derived from intent + sentiment + message length only, never message content.
+- [`admin/src/lib/adminApi.ts`](admin/src/lib/adminApi.ts) — `fetchAiUsageSummary()` calls the new `admin_ai_usage_summary()` SECURITY DEFINER RPC (admin-gated).
+- Wired into routing (`/intelligence`), the sidebar nav, and the role→page permission map.
+- Pairs with consumer v6.4.6, which logs the `ai_usage` rows.
 
 ## Pre-1.0 history
 

@@ -1,3 +1,28 @@
+// Needs vs Wants mapping for expense categories
+export const NEEDS_WANTS_MAP: Record<string, 'need' | 'want'> = {
+  food: 'need',
+  transport: 'need',
+  shopping: 'want',
+  entertainment: 'want',
+  health: 'need',
+  utilities: 'need',
+  rent: 'need',
+  education: 'need',
+  travel: 'want',
+  childcare: 'need',
+  insurance: 'need',
+  debt_payment: 'need',
+  debt_interest: 'need',
+  debt_principal: 'need',
+  transfer: 'need', // ambiguous, treat as need for now
+  investment_in: 'want',
+  investment_out: 'want',
+  other_exp: 'want',
+};
+
+export function needsWantsForCategory(catId: string): 'need' | 'want' | undefined {
+  return NEEDS_WANTS_MAP[catId];
+}
 // FinFlow v6 — All static lookup tables in one file.
 // Categories · Currencies · Payment methods · Profile types · Goal/Asset/Debt metadata · Locales
 

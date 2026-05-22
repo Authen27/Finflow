@@ -3,16 +3,16 @@ import { NavLink, Link } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Home, CreditCard, FileText,
   ScrollText, Settings, Sun, Moon, Search, ChevronDown, LogOut,
-  HelpCircle,
+  HelpCircle, Brain,
 } from 'lucide-react';
 import { useAdminStore } from '../store';
 import { signOut } from '../lib/auth';
 import type { AdminRole } from '../types';
 
 const ROLE_PAGES: Record<AdminRole, string[]> = {
-  super:   ['dashboard','users','households','subscriptions','content','audit','settings','help'],
-  roles:   ['dashboard','users','households','audit','help'],
-  content: ['dashboard','content','help'],
+  super:   ['dashboard','users','households','subscriptions','content','audit','intelligence','settings','help'],
+  roles:   ['dashboard','users','households','audit','intelligence','help'],
+  content: ['dashboard','content','intelligence','help'],
 };
 
 const NAV = [
@@ -22,6 +22,7 @@ const NAV = [
   { to: '/subscriptions', page: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
   { to: '/content',       page: 'content',       label: 'Content',       icon: FileText },
   { to: '/audit',         page: 'audit',         label: 'Audit Log',     icon: ScrollText },
+  { to: '/intelligence',  page: 'intelligence',  label: 'AI Intelligence', icon: Brain },
   { to: '/settings',      page: 'settings',      label: 'Settings',      icon: Settings },
   { to: '/help',          page: 'help',          label: 'Help & Manual', icon: HelpCircle },
 ];
@@ -65,7 +66,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               <div className="text-lg leading-none" style={{ fontFamily: 'var(--ff-serif, Georgia)', fontWeight: 500, letterSpacing: '-0.015em' }}>
                 Fin<span style={{ fontStyle: 'italic', color: '#E26D5C' }}>Flow</span>
               </div>
-              <div className="font-mono text-[0.55rem] tracking-[0.18em] uppercase text-ink-dim mt-0.5">Admin · v1.0.3</div>
+              <div className="font-mono text-[0.55rem] tracking-[0.18em] uppercase text-ink-dim mt-0.5">Admin · v1.0.4</div>
             </div>
           </Link>
         </div>

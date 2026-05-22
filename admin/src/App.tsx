@@ -7,6 +7,7 @@ import Households from './pages/Households';
 import Subscriptions from './pages/Subscriptions';
 import Content from './pages/Content';
 import Audit from './pages/Audit';
+import Intelligence from './pages/Intelligence';
 import Settings from './pages/Settings';
 import Help from './pages/Help';
 import { useAdminStore } from './store';
@@ -27,8 +28,8 @@ function AppShell() {
   const can = (page: string): boolean => {
     if (page === 'help')        return true;   // help is open to everyone
     if (role === 'super')       return true;
-    if (role === 'roles')       return ['dashboard','users','households','audit'].includes(page);
-    if (role === 'content')     return ['dashboard','content'].includes(page);
+    if (role === 'roles')       return ['dashboard','users','households','audit','intelligence'].includes(page);
+    if (role === 'content')     return ['dashboard','content','intelligence'].includes(page);
     return false;
   };
 
@@ -41,6 +42,7 @@ function AppShell() {
         <Route path="/subscriptions" element={can('subscriptions') ? <Subscriptions /> : <Forbidden />} />
         <Route path="/content"       element={can('content')       ? <Content />       : <Forbidden />} />
         <Route path="/audit"         element={can('audit')         ? <Audit />         : <Forbidden />} />
+        <Route path="/intelligence"  element={can('intelligence')  ? <Intelligence /> : <Forbidden />} />
         <Route path="/settings"      element={can('settings')      ? <Settings />      : <Forbidden />} />
         <Route path="/help"          element={<Help />} />
         <Route path="*"              element={<Navigate to="/" replace />} />

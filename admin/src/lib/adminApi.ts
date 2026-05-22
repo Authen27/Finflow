@@ -41,6 +41,39 @@ export async function fetchWeeklyTrend(weeks = 12): Promise<WeeklyTrendRow[]> {
   return (data as WeeklyTrendRow[]) || [];
 }
 
+// ── AI usage / intelligence ─────────────────────────────────────────
+export interface AiUsageSegment {
+  userId: string;
+  email: string | null;
+  interactions: number;
+  topIntent: string | null;
+  avgSentiment: number | null;
+  lastSeen: string | null;
+}
+export interface AiUsageSummary {
+  total: number;
+  users: number;
+  last7: number;
+  last30: number;
+  byIntent: Record<string, number>;
+  bySentiment: Record<string, number>;
+  segments: AiUsageSegment[];
+}
+export async function fetchAiUsageSummary(): Promise<AiUsageSummary> {
+  const { data, error } = await sb().rpc('admin_ai_usage_summary');
+  if (error) throw error;
+  const d = (data || {}) as Partial<AiUsageSummary>;
+  return {
+    total: d.total ?? 0,
+    users: d.users ?? 0,
+    last7: d.last7 ?? 0,
+    last30: d.last30 ?? 0,
+    byIntent: d.byIntent ?? {},
+    bySentiment: d.bySentiment ?? {},
+    segments: d.segments ?? [],
+  };
+}
+
 // ── Users ───────────────────────────────────────────────────────────
 export interface AdminUserRow {
   id: string;

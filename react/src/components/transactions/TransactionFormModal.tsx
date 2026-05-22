@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import { Input, Select, Field, FieldRow } from '../ui/Input';
@@ -9,8 +9,8 @@ import {
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
   CURRENCIES,
-  PAYMENT_METHODS,
 } from '../../constants';
+import { buildAccounts, resolveAccount, ACCOUNT_REQUIRED_TYPES } from '../../lib/accounts';
 import type { Transaction, TxnType, Recurrence } from '../../types';
 
 interface Props {
@@ -76,11 +76,13 @@ function categoriesFor(type: TxnType) {
 }
 
 export default function TransactionFormModal(props: Props) {
-  const profile          = useStore(s => s.profile);
-  const members          = useStore(s => s.members);
+  const profile           = useStore(s => s.profile);
+  const members           = useStore(s => s.members);
+  const assets            = useStore(s => s.assets);
+  const debts             = useStore(s => s.debts);
   const upsertTransaction = useStore(s => s.upsertTransaction);
   const removeTransaction = useStore(s => s.removeTransaction);
-  const toast            = useStore(s => s.toast);
+  const toast             = useStore(s => s.toast);
 
   // Bind to the global store unless explicit props are passed
   const storeOpen     = useStore(s => s.txnModalOpen);
@@ -92,6 +94,12 @@ export default function TransactionFormModal(props: Props) {
 
   const [form, setForm]    = useState<FormState>(blank(profile.baseCurrency));
   const [saving, setSaving] = useState(false);
+
+  // Linked spending accounts derived from Net Worth (cash + bank assets + credit cards).
+  const accounts = useMemo(() => buildAccounts(assets, debts), [assets, debts]);
+  const accountRequired = ACCOUNT_REQUIRED_TYPES.includes(
+    form.type as (typeof ACCOUNT_REQUIRED_TYPES)[number],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -136,6 +144,28 @@ export default function TransactionFormModal(props: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.type]);
 
+  // ── split helpers ──
+  function updateParticipant(i: number, patch: Partial<SplitParticipantForm>) {
+    setForm(f => ({ ...f, splitParticipants: f.splitParticipants.map((x, j) => j === i ? { ...x, ...patch } : x) }));
+  }
+  function addParticipant() {
+    setForm(f => ({ ...f, splitParticipants: [...f.splitParticipants, { name: '', share: '', isYou: false, paid: false }] }));
+  }
+  function removeParticipant(i: number) {
+    setForm(f => ({ ...f, splitParticipants: f.splitParticipants.filter((_, j) => j !== i) }));
+  }
+  function autoEqualSplit() {
+    const n = form.splitParticipants.length;
+    const bill = parseFloat(form.amount) || 0;
+    if (n < 1 || bill <= 0) return;
+    // Distribute evenly, pushing rounding remainder onto the first participant.
+    const base = Math.floor((bill / n) * 100) / 100;
+    const shares = Array(n).fill(base);
+    const remainder = Math.round((bill - base * n) * 100) / 100;
+    shares[0] = Math.round((shares[0] + remainder) * 100) / 100;
+    setForm(f => ({ ...f, splitParticipants: f.splitParticipants.map((p, i) => ({ ...p, share: shares[i].toFixed(2) })) }));
+  }
+
   async function save() {
     const amount = parseFloat(form.amount);
     if (isNaN(amount) || amount <= 0) {
@@ -144,6 +174,11 @@ export default function TransactionFormModal(props: Props) {
     }
     if (!form.description.trim()) {
       toast('Description is required', 'error');
+      return;
+    }
+    // ── Account required for money that moves in/out of an account ──
+    if (accountRequired && !form.paymentMethod) {
+      toast('Choose an account (cash, bank or card) for this transaction', 'error');
       return;
     }
 
@@ -156,6 +191,7 @@ export default function TransactionFormModal(props: Props) {
       const you = parts.find(p => p.isYou);
       if (!you) { toast('A split needs your share', 'error'); return; }
       if (parts.length < 2) { toast('A split needs at least one other participant', 'error'); return; }
+      if (parts.some(p => !p.isYou && !p.name.trim())) { toast('All participants must have a name', 'error'); return; }
       const sumShares = parts.reduce((s, p) => s + p.shareNum, 0);
       if (Math.abs(sumShares - amount) > 0.01) {
         toast(`Participant shares (${sumShares.toFixed(2)}) must add up to the total bill (${amount.toFixed(2)})`, 'error');
@@ -170,8 +206,6 @@ export default function TransactionFormModal(props: Props) {
           name: p.isYou ? 'You' : p.name.trim(),
           isYou: p.isYou || undefined,
           share: p.shareNum,
-          // If you paid, you're settled; counterparties settle later.
-          // If someone external paid, they're settled and you owe your share.
           paid: form.splitPaidBy === 'me' ? Boolean(p.isYou || p.paid) : Boolean(!p.isYou || p.paid),
           paidOn: p.paidOn ?? null,
         })),
@@ -193,7 +227,6 @@ export default function TransactionFormModal(props: Props) {
         paymentMethod: form.paymentMethod || undefined,
         recurring: form.recurring || undefined,
         excluded: form.excluded || undefined,
-        // preserve fields the form doesn't edit
         linkedAssetId: initial?.linkedAssetId,
         linkedDebtId:  initial?.linkedDebtId,
         linkedTxnId:   initial?.linkedTxnId,
@@ -220,6 +253,10 @@ export default function TransactionFormModal(props: Props) {
       toast(`Delete failed: ${(e as Error).message}`, 'error');
     }
   }
+
+  // The current value may be a legacy method not in the derived list — keep it selectable.
+  const currentAccount = resolveAccount(form.paymentMethod, assets, debts);
+  const currentInList = accounts.some(a => a.value === form.paymentMethod);
 
   return (
     <Modal open={open} title={initial ? 'Edit Transaction' : 'Add Transaction'} onClose={onClose}>
@@ -279,15 +316,29 @@ export default function TransactionFormModal(props: Props) {
             {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
           </Select>
         </Field>
-        <Field label="Payment method" hint="optional">
+        <Field label="Account" hint={accountRequired ? 'required' : 'optional'}>
           <Select value={form.paymentMethod} onChange={e => setForm(f => ({ ...f, paymentMethod: e.target.value }))}>
-            <option value="">— None —</option>
-            {Object.entries(PAYMENT_METHODS).map(([id, m]) => (
-              <option key={id} value={id}>{m.name}</option>
+            <option value="">{accountRequired ? '— Select an account —' : '— None —'}</option>
+            {accounts.map(a => (
+              <option key={a.value} value={a.value}>
+                {a.kind === 'card' ? '💳 ' : a.kind === 'bank' ? '🏦 ' : '💵 '}{a.label}
+              </option>
             ))}
+            {/* Preserve a legacy / unlisted value so editing never silently drops it */}
+            {form.paymentMethod && !currentInList && (
+              <option value={form.paymentMethod}>
+                {currentAccount ? currentAccount.label : form.paymentMethod} (legacy)
+              </option>
+            )}
           </Select>
         </Field>
       </FieldRow>
+      {accountRequired && accounts.length <= 1 && (
+        <p className="-mt-2 mb-3 text-[0.7rem] text-ink-dim leading-snug">
+          Tip: add your bank accounts and credit cards on the <strong>Net Worth</strong> page to
+          spend from them here. Only Cash is available until then.
+        </p>
+      )}
 
       <FieldRow>
         <Field label="Recurring" hint="optional">
@@ -339,13 +390,23 @@ export default function TransactionFormModal(props: Props) {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="mono-label">Participants &amp; shares ({form.currency})</label>
-                  <button
-                    type="button"
-                    onClick={() => setForm(f => ({ ...f, splitParticipants: [...f.splitParticipants, { name: '', share: '', isYou: false, paid: false }] }))}
-                    className="font-mono text-[0.6rem] tracking-wider uppercase text-coral hover:underline"
-                  >
-                    + Add person
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={autoEqualSplit}
+                      className="font-mono text-[0.6rem] tracking-wider uppercase text-sage hover:underline"
+                      title="Split the bill equally"
+                    >
+                      = Equal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={addParticipant}
+                      className="font-mono text-[0.6rem] tracking-wider uppercase text-coral hover:underline"
+                    >
+                      + Add person
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   {form.splitParticipants.map((p, i) => (
@@ -355,19 +416,25 @@ export default function TransactionFormModal(props: Props) {
                         value={p.isYou ? 'You' : p.name}
                         disabled={p.isYou}
                         placeholder="Name"
-                        onChange={e => setForm(f => ({ ...f, splitParticipants: f.splitParticipants.map((x, j) => j === i ? { ...x, name: e.target.value } : x) }))}
+                        onChange={e => updateParticipant(i, { name: e.target.value })}
+                        onKeyDown={e => {
+                          if (!p.isYou && (e.key === 'Backspace' || e.key === 'Delete') && !p.name && form.splitParticipants.length > 2) {
+                            e.preventDefault();
+                            removeParticipant(i);
+                          }
+                        }}
                       />
                       <input
                         className="input w-28 py-1.5 text-right"
                         type="number" min="0" step="0.01"
                         value={p.share}
                         placeholder="0.00"
-                        onChange={e => setForm(f => ({ ...f, splitParticipants: f.splitParticipants.map((x, j) => j === i ? { ...x, share: e.target.value } : x) }))}
+                        onChange={e => updateParticipant(i, { share: e.target.value })}
                       />
                       {!p.isYou ? (
                         <button
                           type="button"
-                          onClick={() => setForm(f => ({ ...f, splitParticipants: f.splitParticipants.filter((_, j) => j !== i) }))}
+                          onClick={() => removeParticipant(i)}
                           className="text-ink-dim hover:text-terra w-7 flex-shrink-0 text-center"
                           aria-label="Remove participant"
                         >✕</button>
@@ -375,14 +442,20 @@ export default function TransactionFormModal(props: Props) {
                     </div>
                   ))}
                 </div>
-                {/* Running total vs bill */}
+                {/* Running total vs bill + live validation */}
                 {(() => {
                   const bill = parseFloat(form.amount) || 0;
                   const sum = form.splitParticipants.reduce((s, p) => s + (parseFloat(p.share) || 0), 0);
                   const ok = Math.abs(sum - bill) < 0.01 && bill > 0;
+                  let error = '';
+                  if (bill === 0) error = 'Enter the total bill amount above.';
+                  else if (form.splitParticipants.length < 2) error = 'Add at least one other participant.';
+                  else if (form.splitParticipants.some(p => !p.isYou && !p.name.trim())) error = 'All participants must have a name.';
+                  else if (!ok) error = `Shares (${sum.toFixed(2)}) must add up to the bill (${bill.toFixed(2)}).`;
                   return (
                     <div className={`mt-2 font-mono text-[0.62rem] tracking-wider ${ok ? 'text-sage' : 'text-honey'}`}>
                       Shares total {sum.toFixed(2)} / bill {bill.toFixed(2)} {ok ? '✓' : '— must match'}
+                      {error && <div className="text-terra mt-1 normal-case tracking-normal">{error}</div>}
                     </div>
                   );
                 })()}

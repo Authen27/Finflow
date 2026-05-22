@@ -6,8 +6,8 @@
 
 | App | Path | Current | Live URL | Per-app changelog |
 |---|---|---|---|---|
-| **Consumer (React)** | `react/` | **v6.4.5** | https://react-taupe-xi.vercel.app | [`react/CHANGELOG.md`](react/CHANGELOG.md) |
-| **Admin** | `admin/` | **v1.0.3** | https://finflow-admin.vercel.app | [`admin/CHANGELOG.md`](admin/CHANGELOG.md) |
+| **Consumer (React)** | `react/` | **v6.4.6** | https://react-taupe-xi.vercel.app | [`react/CHANGELOG.md`](react/CHANGELOG.md) |
+| **Admin** | `admin/` | **v1.0.4** | https://finflow-admin.vercel.app | [`admin/CHANGELOG.md`](admin/CHANGELOG.md) |
 | **Vanilla shell (legacy consumer)** | `/` (root) | **v5.0** *(frozen)* | n/a — opens `index.html` directly | [§ Vanilla shell history](#vanilla-shell-history-v10--v50) below |
 
 The three apps deploy independently and are versioned independently. The vanilla shell at the repo root is kept available as the *original* FinFlow app from before the React port; it shares no code with the admin app.
@@ -20,6 +20,8 @@ Newest first. For full per-version detail, follow the link in the **App** column
 
 | Date | App | Version | Headline |
 |---|---|---|---|
+| 2026-05-21 | [Admin](admin/CHANGELOG.md#v104--ai-assistant-intelligence-2026-05-21) | **v1.0.4** | **AI Assistant Intelligence** page — intent/sentiment distribution + per-user business segments from privacy-safe Ask-FinFlow usage (`admin_ai_usage_summary()` RPC). |
+| 2026-05-21 | [Consumer](react/CHANGELOG.md#v646--linked-accounts-dynamic-needswants-ai-usage-metrics-split-bill-ux-2026-05-21) | **v6.4.6** | **Linked accounts + dynamic needs/wants + AI usage metrics.** Payments now draw from Net Worth accounts (cash/bank/credit-card); needs/wants moved to an admin-editable DB table; Ask-FinFlow logs privacy-safe intent/sentiment. Plus split-bill UX and a build-stabilisation pass (two non-compiling files rebuilt). |
 | 2026-05-21 | [Consumer](react/CHANGELOG.md#v645--help-page-real-screenshots--interactive-gifs-2026-05-21) | **v6.4.5** | **Help page: real screenshots & GIFs.** Consolidated Help to 8 searchable topics, each backed by a real capture of the live app — 6 WEBP screenshots + 2 animated GIFs (Add Transaction, Split a bill). Added a reproducible `puppeteer-core` capture pipeline (`react/scripts/capture-help.mjs`). |
 | 2026-05-21 | [Consumer](react/CHANGELOG.md#v644--finflow-design-system-v2-alignment-2026-05-21) | **v6.4.4** | **Design System v2 alignment.** Adopted the full `--ff-*` token set, matched buttons/inputs/cards to the `lib.jsx` FF specs, and upgraded the Pip mascot (eyes/cheeks/smile) + "Fin*Flow*" wordmark. Visual-only. |
 | 2026-05-21 | [Admin](admin/CHANGELOG.md#v103--design-system-v2-brand-marks-2026-05-21) | **v1.0.3** | Design System v2 brand marks: full Pip mascot + Fin*Flow* wordmark + favicon. (Dark "shell" theme deferred pending sign-off.) |

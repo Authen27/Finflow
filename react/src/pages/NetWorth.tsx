@@ -1,4 +1,5 @@
 import { useStore } from '../store';
+import { useEffect } from 'react';
 import { useTranslation } from '../hooks';
 import { Panel } from '../components/ui/Card';
 import { fmt, convert, nowMonthKey } from '../lib/format';
@@ -24,6 +25,23 @@ export default function NetWorth() {
   const toast        = useStore(s => s.toast);
   const openAddAsset  = useStore(s => s.openAddAsset);
   const openEditAsset = useStore(s => s.openEditAsset);
+
+  // Remind once per mount if any liquid (bank/cash) balance is stale (>30 days).
+  useEffect(() => {
+    const now = Date.now();
+    const stale = assets.some(a => {
+      const kind = ASSET_TYPES[a.type]?.liquidity;
+      if (kind !== 'liquid' && kind !== 'short') return false;
+      if (!a.lastUpdated) return true;
+      const days = (now - new Date(a.lastUpdated).getTime()) / (1000 * 60 * 60 * 24);
+      return days > 30;
+    });
+    if (stale) {
+      toast('Some bank or card balances haven’t been updated in over 30 days — review your accounts for accuracy.', 'warning');
+    }
+    // Run once on mount; re-running on every asset edit would spam the toast.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const c   = profile.baseCurrency;
   const ta  = totalAssets(assets, c, rates);

@@ -10,6 +10,7 @@ import {
   reportableTxns, effectiveAmount,
 } from '../lib/calculations';
 import { fmt, fmtSigned, getMonthKey } from '../lib/format';
+import { useCategoryClassifications } from '../lib/categorization';
 import Money from '../components/ui/Money';
 
 type Period = 'day' | 'week' | 'month' | 'quarter' | 'year';
@@ -22,6 +23,7 @@ export default function Reports() {
   const profile = useStore(s => s.profile);
   const rates = useStore(s => s.rates);
   const baseCur = profile.baseCurrency;
+  const classifications = useCategoryClassifications();
   const [period, setPeriod] = useState<Period>('month');
 
   // Build period buckets
@@ -40,6 +42,17 @@ export default function Reports() {
         .forEach(t => { by[t.category] = (by[t.category] || 0) + effectiveAmount(t, baseCur, rates); });
     return Object.entries(by).sort(([, a], [, b]) => b - a).map(([catId, amount]) => ({ catId, amount }));
   }, [txns, start, end, baseCur, rates]);
+
+  // Needs vs Wants breakdown for this period
+  const needsWants = useMemo(() => {
+    let needs = 0, wants = 0;
+    donutData.forEach(({ catId, amount }) => {
+      const tag = classifications[catId];
+      if (tag === 'need') needs += amount;
+      else if (tag === 'want') wants += amount;
+    });
+    return { needs, wants };
+  }, [donutData, classifications]);
 
   // Top expense categories all-time
   const topCats = useMemo(() => {
@@ -99,6 +112,17 @@ export default function Reports() {
         </Panel>
         <Panel title="Category Breakdown" sub="This period">
           <CategoryDonut data={donutData} currency={baseCur} />
+          {/* Needs vs Wants breakdown */}
+          <div className="mt-4 flex gap-4 text-[0.98rem]">
+            <div className="flex-1 bg-bg3 rounded-lg p-3 border border-line flex flex-col items-center">
+              <div className="font-mono text-[0.7rem] tracking-wider uppercase text-ink-dim mb-1">Needs</div>
+              <div className="font-bold text-sage text-lg">{fmt(needsWants.needs, baseCur)}</div>
+            </div>
+            <div className="flex-1 bg-bg3 rounded-lg p-3 border border-line flex flex-col items-center">
+              <div className="font-mono text-[0.7rem] tracking-wider uppercase text-ink-dim mb-1">Wants</div>
+              <div className="font-bold text-honey text-lg">{fmt(needsWants.wants, baseCur)}</div>
+            </div>
+          </div>
         </Panel>
       </div>
 

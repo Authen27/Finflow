@@ -20,35 +20,40 @@ export default function Recurring() {
   const toast = useStore(s => s.toast);
 
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(null as null | any);
   const [type, setType] = useState<'expense' | 'income'>('expense');
   const [freq, setFreq] = useState<RecurrenceFreq>('monthly');
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('rent');
-  const [dayOfMonth, setDayOfMonth] = useState(1);
+  const [dayOfMonth, setDayOfMonth] = useState<number | ''>(1);
   const [autoConfirm, setAutoConfirm] = useState(false);
   const [reminderLead, setReminderLead] = useState<1|3|7>(3);
 
   async function save() {
     if (!name || !amount) return;
-    const startDate = new Date().toISOString().split('T')[0];
-    const next = computeNextDueDate(freq, startDate, undefined, dayOfMonth);
-    await upsert({
+    const startDate = editing?.startDate || new Date().toISOString().split('T')[0];
+    const next = computeNextDueDate(freq, startDate, undefined, typeof dayOfMonth === 'number' ? dayOfMonth : 1);
+    const schedule = {
+      ...(editing || {}),
       transactionTemplate: {
+        ...(editing?.transactionTemplate || {}),
         type, amount: parseFloat(amount), description: name,
         category, currency: baseCur, recurring: freq === 'custom_day' ? 'monthly' : freq,
       },
       frequency: freq,
-      dayOfMonth,
+      dayOfMonth: typeof dayOfMonth === 'number' ? dayOfMonth : 1,
       startDate,
       nextDueDate: next,
       autoConfirm,
-      active: true,
+      active: editing?.active ?? true,
       reminderLeadDays: reminderLead,
-    });
+    };
+    await upsert(schedule);
     setOpen(false);
+    setEditing(null);
     setName(''); setAmount('');
-    toast('Recurring schedule created', 'success');
+    toast(editing ? 'Recurring schedule updated' : 'Recurring schedule created', 'success');
   }
 
   return (
@@ -60,7 +65,18 @@ export default function Recurring() {
             Auto-generated bills, subscriptions &amp; salary · {schedules.length} schedule{schedules.length === 1 ? '' : 's'}
           </p>
         </div>
-        <Button onClick={() => setOpen(true)}>
+        <Button onClick={() => {
+          setOpen(true);
+          setEditing(null);
+          setType('expense');
+          setFreq('monthly');
+          setName('');
+          setAmount('');
+          setCategory('rent');
+          setDayOfMonth(1);
+          setAutoConfirm(false);
+          setReminderLead(3);
+        }}>
           <Plus size={14} /> Add Schedule
         </Button>
       </div>
@@ -90,13 +106,27 @@ export default function Recurring() {
                   <button onClick={() => { if (confirm('Delete this schedule?')) { remove(s.id); toast('Schedule deleted', 'info'); } }} className="p-1.5 text-ink-mid hover:text-terra" title="Delete">
                     <Trash2 size={14} />
                   </button>
+                  <button onClick={() => {
+                    setOpen(true);
+                    setEditing(s);
+                    setType(s.transactionTemplate.type === 'income' ? 'income' : 'expense');
+                    setFreq(s.frequency);
+                    setName(s.transactionTemplate.description);
+                    setAmount(String(s.transactionTemplate.amount));
+                    setCategory(s.transactionTemplate.category);
+                    setDayOfMonth(s.dayOfMonth ?? 1);
+                    setAutoConfirm(s.autoConfirm);
+                    setReminderLead(([1,3,7] as const).includes(s.reminderLeadDays as 1|3|7) ? (s.reminderLeadDays as 1|3|7) : 3);
+                  }} className="p-1.5 text-ink-mid hover:text-coral" title="Edit">
+                    ✎
+                  </button>
                 </div>
               );
             })
         }
       </Panel>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Add Recurring Schedule">
+      <Modal open={open} onClose={() => { setOpen(false); setEditing(null); }} title={editing ? 'Edit Recurring Schedule' : 'Add Recurring Schedule'}>
         <div>
           <Field label="Type">
             <div className="grid grid-cols-2 gap-1 bg-bg3 p-1 rounded-md">
@@ -130,7 +160,22 @@ export default function Recurring() {
             </Field>
             {(freq === 'monthly' || freq === 'custom_day') && (
               <Field label="Day of month">
-                <Input type="number" min={1} max={31} value={dayOfMonth} onChange={e => setDayOfMonth(parseInt(e.target.value) || 1)} />
+                <Input
+                  type="number"
+                  min={1}
+                  max={31}
+                  value={dayOfMonth}
+                  onChange={e => {
+                    const val = e.target.value;
+                    // Allow empty string for easier editing
+                    if (val === '') setDayOfMonth('');
+                    else {
+                      const num = parseInt(val);
+                      setDayOfMonth(isNaN(num) ? '' : Math.max(1, Math.min(31, num)));
+                    }
+                  }}
+                  placeholder="1"
+                />
               </Field>
             )}
           </FieldRow>
@@ -150,8 +195,8 @@ export default function Recurring() {
             </Field>
           </FieldRow>
           <div className="flex gap-2 mt-5 pt-4 border-t border-line">
-            <Button variant="ghost" onClick={() => setOpen(false)} full>Cancel</Button>
-            <Button onClick={save} full>Save Schedule</Button>
+            <Button variant="ghost" onClick={() => { setOpen(false); setEditing(null); }} full>Cancel</Button>
+            <Button onClick={save} full>{editing ? 'Update Schedule' : 'Save Schedule'}</Button>
           </div>
         </div>
       </Modal>

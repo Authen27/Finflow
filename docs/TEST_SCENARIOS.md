@@ -76,11 +76,11 @@ Counts as of 2026-05-23 (Remediation PR #2).
 
 | App | Layer | Tool | File(s) | Scenarios | TD-characterization |
 |---|---|---|---|---|---|
-| Consumer | Unit | Vitest | `react/src/lib/__tests__/*.test.ts` | **45** | 1 (`CON-UNIT-006` ↔ `TD-01 phase A regression pin`) |
+| Consumer | Unit | Vitest | `react/src/lib/__tests__/*.test.ts` | **46** | 2 (`CON-UNIT-006` ↔ TD-01 phase A; `CON-UNIT-046` ↔ TD-01 phase B) |
 | Consumer | E2E  | Playwright | `react/e2e/tests/*.spec.ts` | **6** | 3 (`CON-E2E-004` pins the v6.4 cache-no-clobber fix; `CON-E2E-005` pins TD-05; `CON-E2E-006` pins TD-11) |
 | Admin | Unit | Vitest | `admin/src/lib/__tests__/*.test.ts` | **11** | 0 |
 | Admin | E2E  | Playwright | *(none yet)* | 0 | — |
-| **Total** | | | | **62** | 4 |
+| **Total** | | | | **63** | 5 |
 
 Known coverage gaps (tracked outside this file):
 
@@ -147,6 +147,7 @@ Known coverage gaps (tracked outside this file):
 | CON-UNIT-043 | `react/src/lib/__tests__/money.test.ts` | respects JPY zero-decimals (no minor unit) | Currency-aware scaling. |
 | CON-UNIT-044 | `react/src/lib/__tests__/money.test.ts` | no-ops when source and target currencies match | `convertViaUsdRates`. |
 | CON-UNIT-045 | `react/src/lib/__tests__/money.test.ts` | post-conversion result is quantised to the target currency's native exponent | The exact fix that resolved `CON-UNIT-006`. |
+| CON-UNIT-046 | `react/src/lib/__tests__/calculations.test.ts` | [TD-01 phase B] repeated additions do not drift in float (0.1 problem) | **TD-01 phase B regression pin.** Sums 10 expenses of $0.10 and asserts `totalBalance === -1.00` (strict). Pre-phase-B this drifted to `-1.0000000000000002` because the reducer used JS `+` on `number`; PR #9 migrated the reducer to dinero's `add`. |
 
 ### 4.2 Consumer · E2E (CON-E2E)
 

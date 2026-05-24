@@ -19,7 +19,7 @@
 // test that pinned the pre-TD-01 lossy behaviour, now flipped to assert
 // the fixed behaviour.
 
-import { dinero, toSnapshot, convert as dineroConvert, type Dinero, type DineroCurrency } from 'dinero.js';
+import { dinero, toSnapshot, convert as dineroConvert, add, type Dinero, type DineroCurrency } from 'dinero.js';
 import {
   USD, EUR, GBP, INR, JPY, AUD, CAD, CHF, CNY, AED, SGD, BRL,
 } from '@dinero.js/currencies';
@@ -150,4 +150,36 @@ export function convertViaUsdRates(
   return quantizeToCurrency(
     dineroConvert(dUsd, target, { [target.code]: rateToScaled(rates[toCode] ?? 1) }),
   );
+}
+
+/**
+ * Re-export of dinero's `add` so consumers don't have to import the
+ * library directly. Used by aggregators in `calculations.ts` that need
+ * to fold many amounts together without falling back to float `+`.
+ */
+export { add as addDinero };
+
+/**
+ * A zero-valued Dinero in the given currency, suitable as a `reduce`
+ * initial accumulator. Centralised here so future changes to the
+ * currency-of-zero contract (e.g. carrying a higher scale to retain
+ * sub-minor precision through long sums) happen in one place.
+ */
+export function dineroZero(code: string): Dinero<number> {
+  return dinero({ amount: 0, currency: currencyOf(code) });
+}
+
+/**
+ * Fold an iterable of items into a single Dinero in the target currency.
+ *
+ * `getDinero` maps each item to a Dinero (responsible for any per-item
+ * FX). All addition happens in dinero space — integer arithmetic in the
+ * target currency's minor units — so no float drift can accumulate
+ * across the reduction, no matter how many items are summed. This is
+ * the load-bearing helper of TD-01 phase B.
+ */
+export function sumDinero<T>(items: readonly T[], getDinero: (t: T) => Dinero<number>, baseCode: string): Dinero<number> {
+  let acc = dineroZero(baseCode);
+  for (const it of items) acc = add(acc, getDinero(it));
+  return acc;
 }

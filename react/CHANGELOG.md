@@ -4,7 +4,7 @@
 >
 > The consumer React app at `react/` continues the version line that began with the v1.0–v5.0 vanilla-shell releases at the repo root. The vanilla shell is **frozen at v5.0** and superseded by **v6.0** (the React port). All v6+ versions are React-only.
 >
-> **Current production version: `v6.4.15`**
+> **Current production version: `v6.4.16`**
 > **Live URL:** https://react-taupe-xi.vercel.app
 > **Next planned: `v6.5`** (see Roadmap at the bottom).
 
@@ -22,6 +22,20 @@ The numbering history has some non-monotonic stretches that we keep documented h
 ---
 
 
+
+## v6.4.16 — TD-01 phase B: decimal money — aggregations in dinero space (remediation PR #9) *(2026-05-23)*
+
+Continues the TD-01 rollout. Phase A (PR #8) wired the FX boundary through dinero so each per-call `convert()` was exact. Phase B migrates every **aggregator** in [`react/src/lib/calculations.ts`](react/src/lib/calculations.ts) to fold in dinero space — integer-cents arithmetic with `add` — instead of using JS `+` on `number`. The reductions no longer accumulate float drift across many transactions.
+
+- [`react/src/lib/money.ts`](react/src/lib/money.ts) — exports `addDinero` (re-export of dinero's `add`), new `dineroZero(code)` for accumulator initial state, new generic `sumDinero(items, getDinero, baseCode)` helper.
+- [`react/src/lib/calculations.ts`](react/src/lib/calculations.ts) — internal-only `effectiveDinero(t, base, rates)` produces a Dinero in the base currency; every public aggregator (`monthlyData`, `totalBalance`, `spendByCategory`, `spendByCategoryInRange`, `totalAssets`, `totalLiabilities`, `liquidAssets`, `totalMonthlyDebtPayment`, `splitsOutstanding`) now sums Dineros and calls `fromDinero` only at the function edge. `effectiveAmount` is kept as a thin `number`-returning wrapper for callers that don't yet need Dinero. Public signatures unchanged — every existing call site works without any change.
+- Tests in [`calculations.test.ts`](react/src/lib/__tests__/calculations.test.ts) **tightened from `toBeCloseTo(x, 10)` to strict `.toBe(x)`** where exactness is now achievable (which is most of them — single-currency integer sums + the FX cases that are quantised at the boundary). The previously-tolerant assertions were a hedge against the very drift that's gone.
+- **New `CON-UNIT-046`** pins TD-01 phase B's signature improvement directly: summing 10 expenses of `$0.10` returns exactly `-1.00` via `totalBalance`. Before phase B, the reducer drifted into `-1.0000000000000002` because of the classic `0.1 + 0.2 ≠ 0.3` float problem.
+- `computeEmi` / `splitEmiPortions` (loan math) intentionally **not yet migrated** — they go to Phase C (PR #10) alongside the rest of `amortization.ts`.
+
+Phases C (PR #10) and D (PR #11) remain queued.
+
+---
 
 ## v6.4.15 — TD-01 phase A: decimal money — dinero.js at the FX boundary (remediation PR #8) *(2026-05-23)*
 

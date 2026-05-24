@@ -29,14 +29,18 @@ describe('convert', () => {
     expect(convert(50, 'USD', 'XYZ', DEFAULT_RATES)).toBeCloseTo(50, 10);
   });
 
-  // --- Documents TD-01 (floating-point money). This is a CHARACTERIZATION
-  //     test: it asserts the CURRENT (lossy) behaviour so the decimal-money
-  //     refactor has a visible before/after. Update when TD-01 is fixed. ---
-  it('CON-UNIT-006 · [TD-01] round-trip USD→EUR→USD does NOT return exactly the original', () => {
+  // --- Was the TD-01 characterization test: previously asserted that
+  //     round-trip USD→EUR→USD DRIFTED off the original. After TD-01
+  //     phase A wired `convert()` through dinero.js with banker's
+  //     rounding at the FX boundary, the round-trip is EXACT for every
+  //     amount whose minor-unit representation survives the rate ratio
+  //     intact (and bounded to half-a-minor-unit otherwise). This now
+  //     positively asserts the fixed behaviour for the canonical example
+  //     from the original characterization. ---
+  it('CON-UNIT-006 · [TD-01 fixed] round-trip USD→EUR→USD returns exactly the original', () => {
     const start = 100.10;
     const round = convert(convert(start, 'USD', 'EUR', DEFAULT_RATES), 'EUR', 'USD', DEFAULT_RATES);
-    // Mathematically identical, but float division+multiplication drifts.
-    expect(round).toBeCloseTo(start, 6);
+    expect(round).toBe(start);
   });
 });
 

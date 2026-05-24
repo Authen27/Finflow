@@ -4,7 +4,7 @@
 >
 > The consumer React app at `react/` continues the version line that began with the v1.0–v5.0 vanilla-shell releases at the repo root. The vanilla shell is **frozen at v5.0** and superseded by **v6.0** (the React port). All v6+ versions are React-only.
 >
-> **Current production version: `v6.4.14`**
+> **Current production version: `v6.4.15`**
 > **Live URL:** https://react-taupe-xi.vercel.app
 > **Next planned: `v6.5`** (see Roadmap at the bottom).
 
@@ -22,6 +22,26 @@ The numbering history has some non-monotonic stretches that we keep documented h
 ---
 
 
+
+## v6.4.15 — TD-01 phase A: decimal money — dinero.js at the FX boundary (remediation PR #8) *(2026-05-23)*
+
+**TD-01 (decimal money) starts here.** Phase A of a phased rollout. The `convert()` FX function previously did `(amount / rFrom) * rTo` on raw JS floats, which drifted across round-trips and across aggregations — the canonical TD-01 example. This release wires `convert()` through **dinero.js v2** with banker's rounding at the FX boundary. The public signature is unchanged (number → number, major units), so no caller has to change today; the gain is that the conversion math is now exact integer arithmetic with currency-aware re-quantisation at the edge.
+
+- [`react/src/lib/money.ts`](react/src/lib/money.ts) — new boundary layer. `CURRENCY_REGISTRY` registers all 12 supported currencies with the `@dinero.js/currencies` definitions (JPY=0 decimals natively); `toDinero` / `fromDinero` scale into and out of integer minor units; `convertViaUsdRates` does the FX through USD as before but each leg is dinero-mediated. After every conversion the result is re-quantised to the target currency's native exponent using banker's (half-to-even) rounding, so sub-cent precision from `(amount × rateScaled)` does not bleed through to subsequent operations.
+- [`react/src/lib/format.ts`](react/src/lib/format.ts) — `convert()` body now delegates to `convertViaUsdRates(toDinero(...))` then `fromDinero(...)`. Same arguments, same return type, exact math in the middle.
+- [`react/src/lib/__tests__/money.test.ts`](react/src/lib/__tests__/money.test.ts) — six new ID-tagged unit tests (`CON-UNIT-040..045`) pinning the contract every later phase will lean on (registry coverage, fallback semantics, JPY zero-decimals, and the quantisation that fixed CON-UNIT-006).
+- [`react/src/lib/__tests__/format.test.ts`](react/src/lib/__tests__/format.test.ts) — **`CON-UNIT-006` flipped** from a TD-01 *characterization* test ("round-trip USD→EUR→USD does NOT return the original") to a positive assertion of the fixed behaviour using strict `.toBe(start)` rather than `toBeCloseTo`. The catalog row in [`docs/TEST_SCENARIOS.md`](docs/TEST_SCENARIOS.md) is updated to match.
+- New dev-deps: `dinero.js@^2.0.2` (stable) + `@dinero.js/currencies@^2.0.0-alpha.14`.
+
+**What this PR explicitly does *not* do** (planned for the next phases):
+
+- Phase B (PR #9): migrate `calculations.ts` aggregations to operate in dinero internally so sums no longer drift across `reduce`.
+- Phase C (PR #10): migrate `amortization.ts` (EMI/interest split/schedule/payment apply).
+- Phase D (PR #11): adapter row mappers, `Money` UI component, types.ts `Money` opaque type, charts.
+
+The bundle gains ~5 KB tree-shaken from dinero.js v2.
+
+---
 
 ## v6.4.14 — Route-level code splitting (remediation PR #5) *(2026-05-23)*
 

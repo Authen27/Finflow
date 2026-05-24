@@ -1,7 +1,7 @@
 {
   "name": "finflow-react",
   "private": true,
-  "version": "6.4.14",
+  "version": "6.4.15",
   "type": "module",
   "description": "FinFlow — Family Finance OS · React + TypeScript + Recharts",
   "scripts": {
@@ -17,8 +17,11 @@
     "e2e:report": "playwright show-report"
   },
   "dependencies": {
+    "@dinero.js/currencies": "^2.0.0-alpha.14",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.4",
+    "@tanstack/react-virtual": "^3.13.25",
+    "dinero.js": "^2.0.2",
     "lucide-react": "^0.453.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -35,8 +38,8 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^9.13.0",
     "eslint-plugin-react-hooks": "^5.0.0",
-    "globals": "^15.11.0",
     "gifenc": "^1.0.3",
+    "globals": "^15.11.0",
     "pngjs": "^7.0.0",
     "postcss": "^8.4.47",
     "puppeteer-core": "^23.11.1",

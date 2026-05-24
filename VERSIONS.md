@@ -6,7 +6,7 @@
 
 | App | Path | Current | Live URL | Per-app changelog |
 |---|---|---|---|---|
-| **Consumer (React)** | `react/` | **v6.4.14** | https://react-taupe-xi.vercel.app | [`react/CHANGELOG.md`](react/CHANGELOG.md) |
+| **Consumer (React)** | `react/` | **v6.4.15** | https://react-taupe-xi.vercel.app | [`react/CHANGELOG.md`](react/CHANGELOG.md) |
 | **Admin** | `admin/` | **v1.0.7** | https://finflow-admin.vercel.app | [`admin/CHANGELOG.md`](admin/CHANGELOG.md) |
 | **Database (Supabase)** | `supabase/migrations/` | **admin-roles-and-kpis** | n/a — applied via Supabase MCP | [`db/MIGRATIONS.md`](db/MIGRATIONS.md) |
 | **Vanilla shell (legacy consumer)** | `/` (root) | **v5.0** *(frozen)* | n/a — opens `index.html` directly | [§ Vanilla shell history](#vanilla-shell-history-v10--v50) below |
@@ -21,6 +21,7 @@ Newest first. For full per-version detail, follow the link in the **App** column
 
 | Date | App | Version | Headline |
 |---|---|---|---|
+| 2026-05-23 | [Consumer](react/CHANGELOG.md#v6415--td-01-phase-a-decimal-money--dineroJs-at-the-fx-boundary-remediation-pr-8-2026-05-23) | **v6.4.15** | **TD-01 phase A: decimal money — dinero.js at the FX boundary (remediation PR #8).** `convert()` now routes through dinero.js v2 with banker's rounding at the FX edge. Public signature unchanged; round-trip USD↔EUR is now exact (`CON-UNIT-006` flipped from characterization to positive assertion). 6 new money-module tests (`CON-UNIT-040..045`). Phases B/C/D still queued. |
 | 2026-05-23 | [Database](db/MIGRATIONS.md) | **admin-roles-and-kpis** | **Admin privilege surface into migrations (remediation PR #7 / TD-04).** New migration `20260523060000_admin_roles_and_dashboard_kpis.sql` adds the `admin_role` enum, `admin_roles` table + RLS, `is_admin()` / `has_admin_role()` helpers, and the `admin_dashboard_kpis()` RPC. The privileged authorisation layer is no longer hand-run-only. `content_items` / `subscriptions` backed KPI fields return 0 until follow-up TD-04-extension migrations land them. |
 | 2026-05-23 | [Database](db/MIGRATIONS.md) | **migrations-init** | **DB migrations toolchain (remediation PR #6 / TD-18).** New `supabase/migrations/` directory is the source of truth; current schema is `00000000000000_initial_schema.sql`. `db/schema.sql` is now a generated snapshot kept in sync by a new `db-migrations` CI gate. Foundation for PR #7 (TD-04 admin schema). |
 | 2026-05-23 | [Consumer](react/CHANGELOG.md#v6414--route-level-code-splitting-remediation-pr-5-2026-05-23) | **v6.4.14** | **Route-level code splitting (remediation PR #5 / TD-11).** Every page in `App.tsx` is now `React.lazy`-imported and wrapped in `<Suspense>`; Recharts ships only in the chunks for routes that import it (Dashboard / Reports / NetWorth). New `CON-E2E-006` regression spec verifies Recharts is not fetched on `/transactions`. |

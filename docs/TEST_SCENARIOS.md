@@ -76,11 +76,11 @@ Counts as of 2026-05-23 (Remediation PR #2).
 
 | App | Layer | Tool | File(s) | Scenarios | TD-characterization |
 |---|---|---|---|---|---|
-| Consumer | Unit | Vitest | `react/src/lib/__tests__/*.test.ts` | **39** | 1 (`CON-UNIT-006` ↔ `TD-01`) |
+| Consumer | Unit | Vitest | `react/src/lib/__tests__/*.test.ts` | **45** | 1 (`CON-UNIT-006` ↔ `TD-01 phase A regression pin`) |
 | Consumer | E2E  | Playwright | `react/e2e/tests/*.spec.ts` | **6** | 3 (`CON-E2E-004` pins the v6.4 cache-no-clobber fix; `CON-E2E-005` pins TD-05; `CON-E2E-006` pins TD-11) |
 | Admin | Unit | Vitest | `admin/src/lib/__tests__/*.test.ts` | **11** | 0 |
 | Admin | E2E  | Playwright | *(none yet)* | 0 | — |
-| **Total** | | | | **56** | 4 |
+| **Total** | | | | **62** | 4 |
 
 Known coverage gaps (tracked outside this file):
 
@@ -107,7 +107,7 @@ Known coverage gaps (tracked outside this file):
 | CON-UNIT-003 | `react/src/lib/__tests__/format.test.ts` | converts USD → EUR using the rate table | |
 | CON-UNIT-004 | `react/src/lib/__tests__/format.test.ts` | converts a non-USD pair via the USD base (INR → GBP) | Cross-rate path. |
 | CON-UNIT-005 | `react/src/lib/__tests__/format.test.ts` | treats an unknown currency code as rate 1 (documented fallback) | |
-| CON-UNIT-006 | `react/src/lib/__tests__/format.test.ts` | [TD-01] round-trip USD→EUR→USD does NOT return exactly the original | **TD-01 characterization** — pins current lossy float behaviour. Update when TD-01 lands. |
+| CON-UNIT-006 | `react/src/lib/__tests__/format.test.ts` | [TD-01 fixed] round-trip USD→EUR→USD returns exactly the original | **TD-01 phase A regression pin** — was a characterization test for the pre-fix lossy behaviour; flipped to a positive assertion when PR #8 wired `convert()` through dinero.js. |
 | CON-UNIT-007 | `react/src/lib/__tests__/format.test.ts` | extracts YYYY-MM from an ISO date | |
 | CON-UNIT-008 | `react/src/lib/__tests__/format.test.ts` | nowMonthKey is 7 chars (YYYY-MM) | |
 | CON-UNIT-009 | `react/src/lib/__tests__/format.test.ts` | clamps below, within, and above the range | |
@@ -141,6 +141,12 @@ Known coverage gaps (tracked outside this file):
 | CON-UNIT-037 | `react/src/lib/__tests__/amortization.test.ts` | reduce_tenure keeps EMI and shortens the loan on a part-payment | `applyPayment` strategy. |
 | CON-UNIT-038 | `react/src/lib/__tests__/amortization.test.ts` | reduce_emi keeps tenure (minus one) and lowers the EMI | `applyPayment` strategy. |
 | CON-UNIT-039 | `react/src/lib/__tests__/amortization.test.ts` | aggregates lifetime interest, principal, and YTD from the payment log | `interestSummary`. |
+| CON-UNIT-040 | `react/src/lib/__tests__/money.test.ts` | registers all 12 supported currency codes | TD-01 phase A — pins the CURRENCY_REGISTRY contract. |
+| CON-UNIT-041 | `react/src/lib/__tests__/money.test.ts` | unknown currency code falls back to USD (documented contract) | TD-01 phase A. |
+| CON-UNIT-042 | `react/src/lib/__tests__/money.test.ts` | scales a USD major-unit number to integer cents and back | `toDinero` / `fromDinero` round-trip. |
+| CON-UNIT-043 | `react/src/lib/__tests__/money.test.ts` | respects JPY zero-decimals (no minor unit) | Currency-aware scaling. |
+| CON-UNIT-044 | `react/src/lib/__tests__/money.test.ts` | no-ops when source and target currencies match | `convertViaUsdRates`. |
+| CON-UNIT-045 | `react/src/lib/__tests__/money.test.ts` | post-conversion result is quantised to the target currency's native exponent | The exact fix that resolved `CON-UNIT-006`. |
 
 ### 4.2 Consumer · E2E (CON-E2E)
 

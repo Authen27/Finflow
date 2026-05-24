@@ -5,7 +5,13 @@ import {
 } from '../amortization';
 import type { Debt } from '../../types';
 
-// Test scenarios CON-UNIT-027..039. See docs/TEST_SCENARIOS.md.
+// Test scenarios CON-UNIT-027..039, CON-UNIT-047..048. See docs/TEST_SCENARIOS.md.
+//
+// TD-01 phase C (PR #10) migrated amortization.ts so the amount-bearing
+// pieces (splitPayment, calculateAmortizationSchedule, applyPayment,
+// interestSummary) operate in dinero space when a currency is in scope.
+// Tests that previously used `toBeCloseTo` to tolerate accumulated float
+// drift across the 300-month schedule are tightened here.
 
 function debt(over: Partial<Debt>): Debt {
   return {
@@ -29,13 +35,14 @@ describe('computeEmi', () => {
     expect(computeEmi(200000, 5, 0)).toBe(0);
   });
   it('CON-UNIT-029 · falls back to straight-line when rate is 0', () => {
-    expect(computeEmi(1200, 0, 12)).toBeCloseTo(100, 10);
+    expect(computeEmi(1200, 0, 12)).toBe(100);
   });
 });
 
 describe('splitPayment', () => {
-  it('CON-UNIT-030 · interest = balance * monthly rate; principal = payment - interest', () => {
+  it('CON-UNIT-030 · interest = balance * monthly rate; principal = payment - interest (legacy float mode)', () => {
     // 200000 @ 5%/yr → monthly interest = 200000 * (0.05/12) ≈ 833.33
+    // No currency passed → legacy float behaviour, still toBeCloseTo-tolerant.
     const { interest, principal } = splitPayment(200000, 5, 1170);
     expect(interest).toBeCloseTo(833.333, 2);
     expect(principal).toBeCloseTo(1170 - 833.333, 2);
@@ -43,6 +50,15 @@ describe('splitPayment', () => {
   it('CON-UNIT-031 · never returns negative principal when payment < interest', () => {
     const { principal } = splitPayment(200000, 5, 100);
     expect(principal).toBe(0);
+  });
+  it('CON-UNIT-048 · [TD-01 phase C] currency-quantised interest is the exact native-minor-unit value', () => {
+    // Same inputs as CON-UNIT-030 but with explicit currency. The interest
+    // is now the GBP-native (2 decimals, banker's-rounded) value: 833.33,
+    // not the float-trailing 833.333333333. principal is computed off the
+    // quantised interest, so it's also exact: 1170 - 833.33 = 336.67.
+    const { interest, principal } = splitPayment(200000, 5, 1170, 'GBP');
+    expect(interest).toBe(833.33);
+    expect(principal).toBe(336.67);
   });
 });
 
@@ -66,6 +82,18 @@ describe('calculateAmortizationSchedule', () => {
     expect(sched[0].interest).toBeGreaterThan(sched[100].interest);
     expect(sched[0].principal).toBeLessThan(sched[100].principal);
   });
+  it('CON-UNIT-047 · [TD-01 phase C] 300-row schedule does not accumulate per-step drift', () => {
+    // The whole point of carrying the outstanding balance as a Dinero across
+    // 300 iterations: the sum of every row's `principal` portion must equal
+    // the starting balance, within at most one minor-unit (the final row's
+    // "pay off remaining" rounding). Pre-phase-C the chained
+    // `outstanding -= principal` on floats drifted by 10s of pence by month
+    // 300 on this fixture.
+    const d = debt({ currentBalance: 200000, remainingMonths: 300 });
+    const sched = calculateAmortizationSchedule(d);
+    const totalPrincipal = sched.reduce((s, r) => s + r.principal, 0);
+    expect(Math.abs(totalPrincipal - 200000)).toBeLessThanOrEqual(0.01);
+  });
 });
 
 describe('applyPayment', () => {
@@ -73,15 +101,17 @@ describe('applyPayment', () => {
     const d = debt({ currentBalance: 200000, remainingMonths: 300 });
     const { debt: updated, log } = applyPayment(d, 1170, undefined, '2026-05-22');
     expect(updated.currentBalance).toBeLessThan(200000);
-    expect(updated.currentBalance).toBeCloseTo(200000 - log.principal, 6);
+    // Phase C: currentBalance is now subtract(toDinero(200000), toDinero(principal))
+    // in GBP, so the relation is exact (no toBeCloseTo tolerance needed).
+    expect(updated.currentBalance).toBe(200000 - log.principal);
     expect(updated.remainingMonths).toBe(299);
     expect(log.isPartPayment).toBe(false);
   });
   it('CON-UNIT-037 · reduce_tenure keeps EMI and shortens the loan on a part-payment', () => {
     const d = debt({ currentBalance: 200000, remainingMonths: 300, minimumPayment: 1170 });
     const { debt: updated } = applyPayment(d, 50000, 'reduce_tenure', '2026-05-22');
-    expect(updated.minimumPayment).toBeCloseTo(1170, 6); // EMI unchanged
-    expect(updated.remainingMonths).toBeLessThan(299);   // tenure shortened
+    expect(updated.minimumPayment).toBe(1170);            // EMI unchanged, strict
+    expect(updated.remainingMonths).toBeLessThan(299);    // tenure shortened
   });
   it('CON-UNIT-038 · reduce_emi keeps tenure (minus one) and lowers the EMI', () => {
     const d = debt({ currentBalance: 200000, remainingMonths: 300, minimumPayment: 1170 });
@@ -101,8 +131,9 @@ describe('interestSummary', () => {
       ],
     });
     const s = interestSummary(d);
-    expect(s.lifetime).toBeCloseTo(1500, 10);
-    expect(s.principalPaid).toBeCloseTo(840, 10);
-    expect(s.ytd).toBeCloseTo(700, 10); // only the current-year entry
+    // Phase B/C: integer-cents sums in dinero space, so exact.
+    expect(s.lifetime).toBe(1500);
+    expect(s.principalPaid).toBe(840);
+    expect(s.ytd).toBe(700); // only the current-year entry
   });
 });

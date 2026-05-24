@@ -1,5 +1,32 @@
 // FinFlow v6 — Type definitions
 // All data models in one place. Imported throughout the app.
+//
+// ── Money fields (TD-01 discipline) ─────────────────────────────
+//
+// Every `amount`, `limit`, `value`, `currentBalance`, `principal`,
+// `minimumPayment`, `target`, `current`, `yourShare`, `share`,
+// `extraPayment`, `monthly_amount`, etc. is a JS `number` in **major
+// units** (dollars, euros, yen). They are always paired with an explicit
+// `currency` field on the same entity (or carry the household's
+// `baseCurrency` when not specified). The current/published versions
+// reflect the TD-01 rollout (PR #8–#10):
+//
+//   • At the FX boundary  (`lib/format.ts:convert`) — exact via dinero.js
+//     with banker's rounding at the target currency's native exponent.
+//   • Aggregations / sums (`lib/calculations.ts`) — folded in dinero space
+//     via `sumDinero` so reductions don't drift across many transactions.
+//   • Amortisation / EMI (`lib/amortization.ts`) — outstanding-balance
+//     chains and interest splits run through dinero in the debt's native
+//     currency so a 300-row schedule doesn't accumulate per-step drift.
+//   • Cloud boundary (`lib/supabaseAdapter.ts` row mappers) — every
+//     money column goes through `lib/money.ts:parseMoneyFromCloud`,
+//     which handles Supabase's `numeric(15,2)` string serialisation
+//     defensively.
+//
+// A future PR may introduce a `Money` opaque type (a `number` brand) to
+// move these guarantees from runtime convention into the compiler. Until
+// then, the convention above is what the math layer relies on — if you
+// add a new money field, route it through the same primitives.
 
 export type TxnType = 'income' | 'expense' | 'investment' | 'transfer';
 export type Recurrence = '' | 'weekly' | 'monthly' | 'yearly';

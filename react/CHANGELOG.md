@@ -4,7 +4,7 @@
 >
 > The consumer React app at `react/` continues the version line that began with the v1.0–v5.0 vanilla-shell releases at the repo root. The vanilla shell is **frozen at v5.0** and superseded by **v6.0** (the React port). All v6+ versions are React-only.
 >
-> **Current production version: `v6.4.16`**
+> **Current production version: `v6.4.17`**
 > **Live URL:** https://react-taupe-xi.vercel.app
 > **Next planned: `v6.5`** (see Roadmap at the bottom).
 
@@ -22,6 +22,32 @@ The numbering history has some non-monotonic stretches that we keep documented h
 ---
 
 
+
+## v6.4.17 — TD-01 phases C+D: decimal money — amortisation + cloud boundary (remediation PR #10) *(2026-05-23)*
+
+**Closes TD-01.** Combined Phase C (amortisation engine) and Phase D (cloud boundary + types) into a single release. After this PR, the entire money-handling pipeline — FX boundary, aggregations, EMI / interest chains, and cloud row-mappers — runs through dinero-quantised math in the appropriate currency. Aggregation drift across long histories and 300-month amortisation schedules is gone.
+
+**Phase C — `react/src/lib/amortization.ts`:**
+
+- New internals: `quantizeDinero` (banker's-round to native currency exponent) + `rateAsScaled` (express a JS float rate as the scaled factor `dinero.multiply` accepts).
+- [`splitPayment`](react/src/lib/amortization.ts) now takes an **optional `currency`** parameter. When supplied, both interest *and* principal are computed in dinero (subtract in dinero space, then `fromDinero` at the edge), so `splitPayment(200000, 5, 1170, 'GBP')` returns exactly `{interest: 833.33, principal: 336.67}` — not the float-drift `336.66999999999996` you'd get from `1170 - 833.33` in raw JS. Default (no currency) preserves legacy float behaviour for back-compat.
+- [`calculateAmortizationSchedule`](react/src/lib/amortization.ts) carries the outstanding balance as a Dinero in `debt.currency` across the entire iteration (`subtract(outstandingD, principalD)`) so a 300-row schedule can't accumulate per-step drift. New regression pin `CON-UNIT-047` asserts `Σ row.principal ≈ debt.currentBalance` within £0.01.
+- [`applyPayment`](react/src/lib/amortization.ts) threads `debt.currency` into `splitPayment` and recomputes `newOutstanding` via dinero subtract. `CON-UNIT-036` tightened from `toBeCloseTo` to strict `.toBe`.
+- [`interestSummary`](react/src/lib/amortization.ts) reuses Phase B's `sumDinero` to fold lifetime / YTD / principalPaid in integer minor units. `CON-UNIT-039` tightened to strict `.toBe`.
+- `computeEmi` / `computeRemainingMonths` intentionally **stay as float derivations** — their outputs feed into the dinero-quantised layers above where currency-aware exactness lives.
+
+**Phase D — cloud boundary + types:**
+
+- [`react/src/lib/money.ts`](react/src/lib/money.ts) exports a new `parseMoneyFromCloud(v)` helper. Accepts string (the Supabase `numeric(15,2)` JSON serialisation), number, null, undefined, or empty. Returns 0 on null / undefined / empty / NaN. Centralises the cloud-boundary contract.
+- [`react/src/lib/supabaseAdapter.ts`](react/src/lib/supabaseAdapter.ts) row mappers (`rowToTxn`, `rowToBudget`, `rowToGoal`, `rowToDebt`, `rowToAsset`) replace inline `Number(r.amount)` casts with `parseMoneyFromCloud(...)`. Non-money decimals (interest_rate %, rate_to_usd) keep their plain `Number()` on purpose — different failure semantics. Two new tests `CON-UNIT-049/050` pin the contract.
+- [`react/src/types.ts`](react/src/types.ts) gains a header-level **"Money fields (TD-01 discipline)"** doc block that documents the dinero contract end-to-end and notes that a future `Money` opaque type will move the guarantee from runtime convention to the compiler.
+- **`Money` UI component** ([`react/src/components/ui/Money.tsx`](react/src/components/ui/Money.tsx)) was audited: it only calls `fmt()` / `fmtShort()` — pure formatting, no math. Unchanged.
+
+**Test catalog growth:** 4 new pins (`CON-UNIT-047/048/049/050`); 5 tightened from `toBeCloseTo` to strict `.toBe`. Coverage table updated to 50 consumer-unit / 67 total. [`docs/TEST_SCENARIOS.md`](docs/TEST_SCENARIOS.md) catalog in lock-step.
+
+**TD-01 status:** the `[TD-01]` entry can now be marked **Resolved** in `TECH_DEBT.md`. The remaining future-cleanup work (introducing a `Money` opaque type to move runtime convention into the compiler) is a separate, smaller PR — not part of TD-01's spec.
+
+---
 
 ## v6.4.16 — TD-01 phase B: decimal money — aggregations in dinero space (remediation PR #9) *(2026-05-23)*
 

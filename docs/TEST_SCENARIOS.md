@@ -76,11 +76,11 @@ Counts as of 2026-05-23 (Remediation PR #2).
 
 | App | Layer | Tool | File(s) | Scenarios | TD-characterization |
 |---|---|---|---|---|---|
-| Consumer | Unit | Vitest | `react/src/lib/__tests__/*.test.ts` | **46** | 2 (`CON-UNIT-006` ↔ TD-01 phase A; `CON-UNIT-046` ↔ TD-01 phase B) |
+| Consumer | Unit | Vitest | `react/src/lib/__tests__/*.test.ts` | **50** | 4 (`CON-UNIT-006` ↔ TD-01-A; `CON-UNIT-046` ↔ TD-01-B; `CON-UNIT-047` ↔ TD-01-C schedule drift; `CON-UNIT-048` ↔ TD-01-C currency quantisation) |
 | Consumer | E2E  | Playwright | `react/e2e/tests/*.spec.ts` | **6** | 3 (`CON-E2E-004` pins the v6.4 cache-no-clobber fix; `CON-E2E-005` pins TD-05; `CON-E2E-006` pins TD-11) |
 | Admin | Unit | Vitest | `admin/src/lib/__tests__/*.test.ts` | **11** | 0 |
 | Admin | E2E  | Playwright | *(none yet)* | 0 | — |
-| **Total** | | | | **63** | 5 |
+| **Total** | | | | **67** | 7 |
 
 Known coverage gaps (tracked outside this file):
 
@@ -148,6 +148,10 @@ Known coverage gaps (tracked outside this file):
 | CON-UNIT-044 | `react/src/lib/__tests__/money.test.ts` | no-ops when source and target currencies match | `convertViaUsdRates`. |
 | CON-UNIT-045 | `react/src/lib/__tests__/money.test.ts` | post-conversion result is quantised to the target currency's native exponent | The exact fix that resolved `CON-UNIT-006`. |
 | CON-UNIT-046 | `react/src/lib/__tests__/calculations.test.ts` | [TD-01 phase B] repeated additions do not drift in float (0.1 problem) | **TD-01 phase B regression pin.** Sums 10 expenses of $0.10 and asserts `totalBalance === -1.00` (strict). Pre-phase-B this drifted to `-1.0000000000000002` because the reducer used JS `+` on `number`; PR #9 migrated the reducer to dinero's `add`. |
+| CON-UNIT-047 | `react/src/lib/__tests__/amortization.test.ts` | [TD-01 phase C] 300-row schedule does not accumulate per-step drift | **TD-01 phase C regression pin.** Sums every row's `principal` portion over a 300-month schedule and asserts the total is within £0.01 of the starting balance. Pre-phase-C the chained `outstanding -= principal` drifted by tens of pence by the final row. |
+| CON-UNIT-048 | `react/src/lib/__tests__/amortization.test.ts` | [TD-01 phase C] currency-quantised interest is the exact native-minor-unit value | `splitPayment(200000, 5, 1170, 'GBP')` returns `interest === 833.33` strictly (not `833.333333…`); principal computed off the quantised interest is also exact (`336.67`). |
+| CON-UNIT-049 | `react/src/lib/__tests__/money.test.ts` | parseMoneyFromCloud accepts string, number, null, undefined, and empty without throwing | TD-01 phase D — pins the supabaseAdapter row-mapper boundary contract. |
+| CON-UNIT-050 | `react/src/lib/__tests__/money.test.ts` | parseMoneyFromCloud returns 0 for non-finite inputs (NaN, garbage strings) | Defensive contract: bad row data must not propagate NaN into the math layer. |
 
 ### 4.2 Consumer · E2E (CON-E2E)
 

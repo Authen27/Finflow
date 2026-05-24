@@ -6,7 +6,7 @@
 
 | App | Path | Current | Live URL | Per-app changelog |
 |---|---|---|---|---|
-| **Consumer (React)** | `react/` | **v6.4.16** | https://react-taupe-xi.vercel.app | [`react/CHANGELOG.md`](react/CHANGELOG.md) |
+| **Consumer (React)** | `react/` | **v6.4.17** | https://react-taupe-xi.vercel.app | [`react/CHANGELOG.md`](react/CHANGELOG.md) |
 | **Admin** | `admin/` | **v1.0.7** | https://finflow-admin.vercel.app | [`admin/CHANGELOG.md`](admin/CHANGELOG.md) |
 | **Database (Supabase)** | `supabase/migrations/` | **admin-roles-and-kpis** | n/a — applied via Supabase MCP | [`db/MIGRATIONS.md`](db/MIGRATIONS.md) |
 | **Vanilla shell (legacy consumer)** | `/` (root) | **v5.0** *(frozen)* | n/a — opens `index.html` directly | [§ Vanilla shell history](#vanilla-shell-history-v10--v50) below |
@@ -21,6 +21,7 @@ Newest first. For full per-version detail, follow the link in the **App** column
 
 | Date | App | Version | Headline |
 |---|---|---|---|
+| 2026-05-23 | [Consumer](react/CHANGELOG.md#v6417--td-01-phases-cd-decimal-money--amortisation--cloud-boundary-remediation-pr-10-2026-05-23) | **v6.4.17** | **TD-01 phases C+D: decimal money — amortisation + cloud boundary (remediation PR #10).** **Closes TD-01.** Phase C: `amortization.ts` carries outstanding balance as Dinero across 300-row schedules; `splitPayment(…, currency)` quantises both interest and principal. Phase D: new `parseMoneyFromCloud` helper centralises the supabaseAdapter row-mapper boundary; `types.ts` gains the TD-01 discipline doc block. 4 new pins (CON-UNIT-047/048/049/050); 5 existing tests tightened. |
 | 2026-05-23 | [Consumer](react/CHANGELOG.md#v6416--td-01-phase-b-decimal-money--aggregations-in-dinero-space-remediation-pr-9-2026-05-23) | **v6.4.16** | **TD-01 phase B: decimal money — aggregations in dinero space (remediation PR #9).** Every aggregator in `calculations.ts` (sums, grouped reduces, splits) folds in dinero integer-cents arithmetic; reductions no longer drift across `+`. `calculations.test.ts` tightened from `toBeCloseTo` to strict `.toBe` where exactness is now achievable. New `CON-UNIT-046` pins the float-drift fix on 10×$0.10 sums. Phases C/D still queued. |
 | 2026-05-23 | [Consumer](react/CHANGELOG.md#v6415--td-01-phase-a-decimal-money--dineroJs-at-the-fx-boundary-remediation-pr-8-2026-05-23) | **v6.4.15** | **TD-01 phase A: decimal money — dinero.js at the FX boundary (remediation PR #8).** `convert()` now routes through dinero.js v2 with banker's rounding at the FX edge. Public signature unchanged; round-trip USD↔EUR is now exact (`CON-UNIT-006` flipped from characterization to positive assertion). 6 new money-module tests (`CON-UNIT-040..045`). Phases B/C/D still queued. |
 | 2026-05-23 | [Database](db/MIGRATIONS.md) | **admin-roles-and-kpis** | **Admin privilege surface into migrations (remediation PR #7 / TD-04).** New migration `20260523060000_admin_roles_and_dashboard_kpis.sql` adds the `admin_role` enum, `admin_roles` table + RLS, `is_admin()` / `has_admin_role()` helpers, and the `admin_dashboard_kpis()` RPC. The privileged authorisation layer is no longer hand-run-only. `content_items` / `subscriptions` backed KPI fields return 0 until follow-up TD-04-extension migrations land them. |

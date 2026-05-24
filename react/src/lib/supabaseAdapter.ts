@@ -8,6 +8,16 @@ import type {
   Profile, ExchangeRates, HouseholdMeta, ProfileTypeKey,
 } from '../types';
 import type { DataAdapter, Entity } from './dataAdapter';
+import { parseMoneyFromCloud } from './money';
+
+// TD-01 phase D: money fields arriving from Supabase (`numeric(15,2)`
+// columns serialised as JSON strings) go through `parseMoneyFromCloud`
+// in every row mapper below — centralising the boundary instead of
+// scattering `Number(r.x)` casts so a future PR can replace `number`
+// with a `Money` opaque type in one place. Non-money decimals
+// (interest_rate %, rate_to_usd) keep their plain `Number()` cast on
+// purpose; their semantics (rate, not money) call for a different
+// failure mode (raise rather than coerce to 0).
 
 // Map between our camelCase JS shapes and snake_case Postgres columns.
 // Most columns are 1:1; the exceptions are listed here per entity.
@@ -82,7 +92,7 @@ const txnToRow = (t: Partial<Transaction>, householdId: string): Partial<Transac
 });
 const rowToTxn = (r: TransactionRow): Transaction => ({
   id: r.id, type: r.type as Transaction['type'],
-  amount: Number(r.amount), currency: r.currency,
+  amount: parseMoneyFromCloud(r.amount), currency: r.currency,
   date: r.date, description: r.description, category: r.category,
   note: r.note || undefined,
   memberId: r.member_id || undefined,
@@ -102,7 +112,7 @@ const budgetToRow = (b: Partial<Budget>, hid: string): Partial<BudgetRow> => ({
   monthly_limit: b.limit!, currency: b.currency || 'USD', color: b.color || null,
 });
 const rowToBudget = (r: BudgetRow): Budget => ({
-  id: r.id, category: r.category, limit: Number(r.monthly_limit),
+  id: r.id, category: r.category, limit: parseMoneyFromCloud(r.monthly_limit),
   currency: r.currency, color: r.color || undefined,
 });
 
@@ -114,7 +124,7 @@ const goalToRow = (g: Partial<Goal>, hid: string): Partial<GoalRow> => ({
 });
 const rowToGoal = (r: GoalRow): Goal => ({
   id: r.id, type: r.type as Goal['type'], name: r.name,
-  target: Number(r.target_amount), current: Number(r.current_amount),
+  target: parseMoneyFromCloud(r.target_amount), current: parseMoneyFromCloud(r.current_amount),
   currency: r.currency, deadline: r.deadline || undefined,
   completed: r.completed,
 });
@@ -139,10 +149,10 @@ const rowToDebt = (r: DebtRow): Debt => ({
   id: r.id, type: r.type, name: r.name,
   lender: r.lender || undefined,
   account: r.account_last4 || undefined,
-  principal: r.principal ? Number(r.principal) : 0,
-  currentBalance: Number(r.current_balance),
+  principal: parseMoneyFromCloud(r.principal),
+  currentBalance: parseMoneyFromCloud(r.current_balance),
   interestRate: Number(r.interest_rate),
-  minimumPayment: Number(r.minimum_payment),
+  minimumPayment: parseMoneyFromCloud(r.minimum_payment),
   dueDate: r.due_date || undefined,
   currency: r.currency,
   tenureMonths: r.extras?.tenureMonths,
@@ -158,7 +168,7 @@ const assetToRow = (a: Partial<Asset>, hid: string): Partial<AssetRow> => ({
 });
 const rowToAsset = (r: AssetRow): Asset => ({
   id: r.id, type: r.type, name: r.name,
-  value: Number(r.value), currency: r.currency,
+  value: parseMoneyFromCloud(r.value), currency: r.currency,
   liquidity: r.liquidity as Asset['liquidity'],
   note: r.note || undefined,
   lastUpdated: r.last_updated || undefined,

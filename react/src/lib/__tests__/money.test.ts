@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { toDinero, fromDinero, convertViaUsdRates, CURRENCY_REGISTRY, currencyOf } from '../money';
+import { toDinero, fromDinero, convertViaUsdRates, CURRENCY_REGISTRY, currencyOf, parseMoneyFromCloud } from '../money';
 import { toSnapshot } from 'dinero.js';
 import { DEFAULT_RATES } from '../../constants';
 
-// Test scenarios CON-UNIT-040..045. TD-01 phase A — pins the dinero
-// boundary layer that all later phases will lean on.
+// Test scenarios CON-UNIT-040..045, CON-UNIT-049..050. TD-01 phase A
+// pinned the dinero boundary; phase D adds the cloud-boundary entry
+// helper used by supabaseAdapter row mappers.
 
 describe('CURRENCY_REGISTRY / currencyOf', () => {
   it('CON-UNIT-040 · registers all 12 supported currency codes', () => {
@@ -58,5 +59,25 @@ describe('convertViaUsdRates', () => {
     expect(snap.scale).toBe(2);
     expect(snap.amount).toBe(9200);
     expect(fromDinero(out)).toBe(92);
+  });
+});
+
+describe('parseMoneyFromCloud', () => {
+  it('CON-UNIT-049 · accepts string, number, null, undefined, and empty without throwing', () => {
+    // Supabase serialises numeric(15,2) as a string. The mappers used to
+    // do a blanket Number(...) which gives NaN for some inputs; this
+    // helper centralises the contract.
+    expect(parseMoneyFromCloud('100.10')).toBe(100.10);
+    expect(parseMoneyFromCloud(250.50)).toBe(250.50);
+    expect(parseMoneyFromCloud(null)).toBe(0);
+    expect(parseMoneyFromCloud(undefined)).toBe(0);
+    expect(parseMoneyFromCloud('')).toBe(0);
+  });
+
+  it('CON-UNIT-050 · returns 0 for non-finite inputs (NaN, garbage strings)', () => {
+    // Defensive: bad row data must not propagate NaN into the math layer
+    // and silently corrupt aggregations. 0 is the documented fallback.
+    expect(parseMoneyFromCloud('not-a-number')).toBe(0);
+    expect(parseMoneyFromCloud(Number.NaN)).toBe(0);
   });
 });

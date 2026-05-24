@@ -183,3 +183,28 @@ export function sumDinero<T>(items: readonly T[], getDinero: (t: T) => Dinero<nu
   for (const it of items) acc = add(acc, getDinero(it));
   return acc;
 }
+
+/**
+ * Parse a money value as it arrives from the Supabase cloud boundary.
+ *
+ * TD-01 phase D: Postgres `numeric(15,2)` columns are serialised by
+ * Supabase as JSON **strings** (because JS Number loses precision past
+ * 2^53). The previous row mappers did a blanket `Number(r.amount)`,
+ * which works in practice for amounts < $9e13 but offers no defence
+ * against bad input (NaN, undefined, malformed strings). This helper:
+ *
+ *   • accepts string ("100.10"), number, or null/undefined,
+ *   • returns 0 for null / undefined / empty / NaN inputs (matching the
+ *     previous behaviour of `Number(null) === 0`),
+ *   • centralises the boundary so a future PR can replace `number` with
+ *     a `Money` opaque type in one place rather than every mapper.
+ *
+ * No exact-decimal guarantee is made here yet — that requires a Money
+ * type change end-to-end. The math layer (calculations / amortization)
+ * is what eliminates drift today; this is the defensive entry door.
+ */
+export function parseMoneyFromCloud(v: string | number | null | undefined): number {
+  if (v === null || v === undefined || v === '') return 0;
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) ? n : 0;
+}

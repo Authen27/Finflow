@@ -41,12 +41,17 @@
 
 | Metric | Count | % of Total |
 |---|---:|---:|
-| ✅ **Developed (in CI)** | **6** | **3.7 %** |
-| 🟡 Designed (awaiting build) | 157 | 96.3 % |
+| ✅ **Developed (green in CI)** | **6** | **3.7 %** |
+| 🟣 Golden template landed (awaiting junior pass) | 3 | 1.8 % |
+| 🟡 Designed (awaiting build) | 154 | 94.5 % |
 | 🟠 Blocked on clarification | 8 | 4.9 % |
 | 🔴 Failing / quarantined | 0 | 0.0 % |
 | ⛔ Deprecated | 0 | — |
 | **Total in scope** | **163** | 100 % |
+
+**Golden templates landed in scaffolding PR:** `TXN-FC-001` (S tier),
+`NWRT-FC-002` (M tier), `DEBT-FC-002` (C tier). The junior turns each 🟣
+to ✅ once the test passes in CI on their first feature-area PR.
 
 **Burn-down target:** see §Effort Estimate at the bottom of this file for the
 phased delivery plan against this counter.
@@ -610,23 +615,27 @@ exact selectors per the Page-Object guide at the end.)*
 
 ## Required Test Infrastructure
 
-### Page Objects (add to `react/e2e/pages/`)
-- `DashboardPage` ✅, `TransactionsPage` ✅
-- 🟡 `BudgetsPage`, `GoalsPage`, `DebtsPage`, `AssetsPage`, `SplitsPage`,
-  `NetWorthPage`, `ReportsPage`, `RecurringPage`, `NotificationCenter`,
+### Page Objects (`react/e2e/pages/`)
+- ✅ `DashboardPage`, `TransactionsPage`, `TransactionFormModal`,
+  `NetWorthPage`, `BudgetsPage`, `GoalsPage`, `DebtsPage`, `AssetsPage`
+  *(scaffolding PR — Phase 1 ready)*
+- 🟡 `SplitsPage`, `ReportsPage`, `RecurringPage`, `NotificationCenter`,
   `SettingsPage` (with nested `AccountSection`, `LocalizationSection`,
   `AppearanceSection`, `DebtPrefsSection`, `SyncSection`),
   `AuthPage` (sign-in/up/reset/accept-invite), `OnboardingPage`,
   `HouseholdSwitcher`, `SearchBar`.
 
 ### Fixture Extensions (`react/e2e/fixtures/`)
-- 🟡 `advanceClock(days|date)` helper wrapping `page.clock.fastForward`.
-- 🟡 `seedWith({ debts?, goals?, recurring?, splits?, members?, assets? })`
+- ✅ `advanceClock(epochMs | dateString)` helper wrapping
+  `page.clock.setFixedTime`.
+- ✅ `seedWith({ debts?, goals?, recurring?, splits?, members?, assets?, profile? })`
   factory that deep-merges into `defaultSeed`.
+- ✅ `sampleCreditCardDebt` reference seed for §7 DEBT-FC.
 - 🟡 `mockExchangeRates(rates)` to pin FX for FX-FC suite.
-- 🟡 `withCloud()` wrapper that injects `VITE_SUPABASE_URL/ANON_KEY` and a
-  scripted Supabase mock for `@cloud`-tagged tests (or runs against an
-  ephemeral Supabase branch via `mcp__3c39fff2-…__create_branch`).
+- 🟡 `withCloud()` wrapper running against an ephemeral Supabase branch
+  via the Supabase MCP (`create_branch` / `delete_branch`). Mock path
+  abandoned — see `docs/ROADMAP_AUTO_LINKING.md` rationale on testing
+  against the real cloud boundary.
 
 ### Test Hooks in App Code
 - 🟡 `/__e2e_error` ✅

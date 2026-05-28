@@ -4,9 +4,15 @@
 >
 > The admin app is a **standalone product**, separate from the consumer app at `react/`. It shares no code with the v1.0–v5.0 vanilla shell at the repo root (which is the *consumer* legacy app). Admin's version line starts at **v1.0.0**.
 >
-> **Current production version: `v1.0.7`**
+> **Current production version: `v1.0.8`**
 > **Live URL:** https://finflow-admin.vercel.app
 > **Next planned: `v1.1.0`** (see Roadmap at the bottom).
+
+---
+
+## v1.0.8 — Slug sanitiser edge-case fix (remediation PR #3) *(2026-05-24)*
+
+Bugfix release. Fixes an edge-case in the `slugify()` sanitiser where punctuation-only inputs (for example `'!!!  ???  @@@'`) collapsed to a single hyphen. `slugify()` now trims the intermediate result after stripping punctuation so whitespace-only inputs return the empty string as intended. Tests updated: `ADM-UNIT-006` now asserts the corrected behaviour. No user-visible UI changes.
 
 ---
 

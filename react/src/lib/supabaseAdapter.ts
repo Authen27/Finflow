@@ -44,6 +44,7 @@ interface TransactionRow {
 interface BudgetRow {
   id: string; household_id: string;
   category: string; monthly_limit: number; currency: string; color: string | null;
+  period?: string | null; period_start?: string | null; period_end?: string | null;
   updated_at: string; deleted_at: string | null;
 }
 
@@ -110,10 +111,14 @@ const rowToTxn = (r: TransactionRow): Transaction => ({
 const budgetToRow = (b: Partial<Budget>, hid: string): Partial<BudgetRow> => ({
   id: b.id, household_id: hid, category: b.category!,
   monthly_limit: b.limit!, currency: b.currency || 'USD', color: b.color || null,
+  period: b.period || null, period_start: b.periodStart || null, period_end: b.periodEnd || null,
 });
 const rowToBudget = (r: BudgetRow): Budget => ({
   id: r.id, category: r.category, limit: parseMoneyFromCloud(r.monthly_limit),
   currency: r.currency, color: r.color || undefined,
+  period: (r.period as Budget['period']) || 'monthly',
+  periodStart: r.period_start || undefined,
+  periodEnd: r.period_end || undefined,
   updated_at: r.updated_at,   // TD-03 phase B — concurrency precondition
 });
 
@@ -403,16 +408,15 @@ export class SupabaseAdapter implements DataAdapter {
   }
 
   async replaceAll<T = unknown>(entity: Entity, householdId: string, records: T[]): Promise<T[]> {
-    // Used during bulk imports. Soft-delete existing then insert.
-    const tableName = entity === 'members' ? 'memberships' : entity;
-    if (entity !== 'members') {
-      await this.sb.from(tableName).update({ deleted_at: new Date().toISOString() })
-        .eq('household_id', householdId).is('deleted_at', null);
-    } else {
-      await this.sb.from('memberships').delete().eq('household_id', householdId);
-    }
-    for (const r of records) await this.upsert(entity, householdId, r as { id?: string });
-    return records;
+    // TD-09: prefer atomic server-side replace RPC for performance and
+    // correctness. Each `replace_<entity>` RPC soft-deletes existing rows
+    // and inserts the provided set inside a single transaction.
+    const rpcName = entity === 'members' ? 'replace_memberships' : `replace_${entity}`;
+    const payload = { h: householdId, rows: records } as Record<string, unknown>;
+    const { data, error } = await this.sb.rpc(rpcName, payload as Record<string, unknown>);
+    if (error) throw error;
+    const rows = (data || []) as unknown[];
+    return rows.map(r => this.mapRowBack(entity, r)) as T[];
   }
 
   // ── rates ──────────────────────────────────────────────────

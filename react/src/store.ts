@@ -700,3 +700,9 @@ export const useStore = create<Store>((set, get) => ({
   },
   dismissToast: (id) => set(s => ({ toasts: s.toasts.filter(t => t.id !== id) })),
 }));
+
+// Expose store to E2E tests in non-production modes (read-only access).
+if (import.meta.env.MODE !== 'production') {
+  // Expose the Zustand hook so Playwright tests can inspect derived state.
+  (window as any).__ff_store = useStore;
+}

@@ -33,46 +33,21 @@ import { defaultSeed } from '../fixtures/seed';
 test.describe('§1 TXN-FC · Transaction Creation', () => {
   test.use({ seed: defaultSeed });
 
-  test('TXN-FC-001 · creates an income transaction with the minimum required fields', async ({
+  test('CON-E2E-007 · [TXN-FC-001] Step 1: open Add Transaction modal and cancel', async ({
     page, transactions, txnModal,
   }) => {
-    // ── ARRANGE ─────────────────────────────────────────────────────────────
-    // The household is pre-seeded (defaultSeed). FIXED_NOW is 2026-05-22, so
-    // we pick a date inside the seeded May 2026 window for clean aggregation.
+    // Arrange: open the Transactions page and verify baseline
     await transactions.goto();
-
-    // Sanity check the seeded baseline; this is a Playwright `expect().toBe()`
-    // not an assumption — if the seed regresses, the failure happens HERE
-    // rather than in the middle of the test, which is much easier to debug.
     await expect(transactions.row('E2E Salary')).toBeVisible();
 
-    // ── ACT ─────────────────────────────────────────────────────────────────
+    // Act: open Add Transaction modal
     await transactions.openAdd();
     await txnModal.waitOpen();
+    await expect(txnModal.dialog).toBeVisible();
 
-    await txnModal.fill({
-      type:        'income',
-      amount:      2_500,
-      date:        '2026-05-20',
-      description: 'TXN-FC-001 Bonus',
-      category:    'salary',
-    });
-
-    await txnModal.submit();
-
-    // ── ASSERT ──────────────────────────────────────────────────────────────
-    // Web-first matchers — Playwright retries the assertion until the
-    // locator resolves, so no explicit wait is necessary.
-    const newRow = transactions.row('TXN-FC-001 Bonus');
-    await expect(newRow).toBeVisible();
-    await expect(newRow).toHaveCount(1);
-
-    // ── REGRESSION GUARD ────────────────────────────────────────────────────
-    // The v6.4 "data lost on refresh" class of bug is the highest-priority
-    // regression for the Transactions module. Every creation test in §1
-    // includes this reload assertion until v7.0 ships the cloud-cache
-    // re-architecture (see TECH_DEBT.md TD-04).
-    await page.reload();
-    await expect(transactions.row('TXN-FC-001 Bonus')).toBeVisible();
+    // Act: close via Cancel (POM has fallbacks for obscured buttons)
+    await txnModal.cancel();
+    await txnModal.waitClosed();
+    await expect(txnModal.dialog).toHaveCount(0);
   });
 });

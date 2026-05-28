@@ -77,10 +77,10 @@ Counts as of 2026-05-23 (Remediation PR #2).
 | App | Layer | Tool | File(s) | Scenarios | TD-characterization |
 |---|---|---|---|---|---|
 | Consumer | Unit | Vitest | `react/src/lib/__tests__/*.test.ts` | **53** | 6 (`CON-UNIT-006` ↔ TD-01-A; `CON-UNIT-046` ↔ TD-01-B; `CON-UNIT-047` ↔ TD-01-C schedule drift; `CON-UNIT-048` ↔ TD-01-C currency quantisation; `CON-UNIT-051` ↔ TD-03 happy path; `CON-UNIT-052` ↔ TD-03 conflict) |
-| Consumer | E2E  | Playwright | `react/e2e/tests/*.spec.ts` | **6** | 3 (`CON-E2E-004` pins the v6.4 cache-no-clobber fix; `CON-E2E-005` pins TD-05; `CON-E2E-006` pins TD-11) |
+| Consumer | E2E  | Playwright | `react/e2e/tests/*.spec.ts` | **9** | 3 (`CON-E2E-004` v6.4 cache-no-clobber; `CON-E2E-005` TD-05; `CON-E2E-006` TD-11). `CON-E2E-007/008/009` are functional-case specs from the parallel QA scaffolding stream, renamed during PR #13 review. |
 | Admin | Unit | Vitest | `admin/src/lib/__tests__/*.test.ts` | **11** | 0 |
 | Admin | E2E  | Playwright | *(none yet)* | 0 | — |
-| **Total** | | | | **70** | 9 |
+| **Total** | | | | **73** | 9 |
 
 Known coverage gaps (tracked outside this file):
 
@@ -166,6 +166,9 @@ Known coverage gaps (tracked outside this file):
 | CON-E2E-004 | `react/e2e/tests/smoke.spec.ts` | seeded data survives a full page reload (persistence guard) | Regression guard for the v6.4 cache-no-clobber fix. |
 | CON-E2E-005 | `react/e2e/tests/error-boundary.spec.ts` | shows fallback UI when a child throws | Regression guard for **TD-05** (PR #4). Navigates to `/__e2e_error` (a page that throws on render) and asserts the boundary's fallback + reset. |
 | CON-E2E-006 | `react/e2e/tests/code-splitting.spec.ts` | Recharts lazy-loads only when chart pages are visited | Regression guard for **TD-11** (PR #5). Asserts Recharts is NOT requested on `/transactions` but IS requested after navigating to `/dashboard`. |
+| CON-E2E-007 | `react/e2e/tests/transactions-create.spec.ts` | [TXN-FC-001] creates an income transaction with the minimum required fields | Functional-case spec landed via the QA scaffolding stream. Originally tagged `TXN-FC-001`; renamed during PR #13 review to follow the established `CON-E2E-NNN` convention while preserving the FC reference for the QA team. |
+| CON-E2E-008 | `react/e2e/tests/debts-payment.spec.ts` | [DEBT-FC-002] payment splits interest and principal at the configured APR | Functional-case spec; renamed during PR #13 review. End-to-end check of the same math that `CON-UNIT-030/048` pin at the unit level. |
+| CON-E2E-009 | `react/e2e/tests/networth-impact.spec.ts` | [NWRT-FC-002] income to a linked account moves NetWorth total assets | Functional-case spec; renamed during PR #13 review. Cross-module assertion (Transactions → NetWorth). |
 
 ### 4.3 Admin · Unit (ADM-UNIT)
 

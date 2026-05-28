@@ -50,11 +50,7 @@ describe('slugify', () => {
     expect(s.length).toBeLessThanOrEqual(80);
   });
   it('ADM-UNIT-006 · returns an empty string for entirely-stripped input', () => {
-    // Input with NO internal whitespace — every char is stripped by the sanitiser,
-    // leaving '' (no space → hyphen step to run on). The `'!!!  ???  @@@'` case
-    // currently returns '-' (whitespace-only after stripping → collapsed to a
-    // single hyphen); that's a separate minor sanitiser bug logged for follow-up.
-    expect(slugify('!!!???@@@')).toBe('');
+    expect(slugify('!!!  ???  @@@')).toBe('');
   });
   it('ADM-UNIT-007 · preserves digits and existing hyphens', () => {
     expect(slugify('debt-snowball vs avalanche 2026')).toBe('debt-snowball-vs-avalanche-2026');

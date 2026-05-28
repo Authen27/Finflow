@@ -30,7 +30,7 @@ const seed = seedWith({});
 test.describe('§4 NWRT-FC · NetWorth Module Impact', () => {
   test.use({ seed });
 
-  test('NWRT-FC-002 · income to a linked account moves NetWorth total assets', async ({
+  test('CON-E2E-009 · [NWRT-FC-002] income to a linked account moves NetWorth total assets', async ({
     page, transactions, txnModal, networth,
   }) => {
     // ── ARRANGE ─────────────────────────────────────────────────────────────
@@ -56,7 +56,9 @@ test.describe('§4 NWRT-FC · NetWorth Module Impact', () => {
       description: 'NWRT-FC-002 Freelance',
       category:    'salary',
     });
-    await txnModal.accountSelect.selectOption({ label: /E2E Checking/ });
+    // Use the robust flexibleSelect helper so this works with native
+    // <select> controls and custom combobox widgets.
+    await txnModal.flexibleSelect(txnModal.accountSelect, 'E2E Checking');
     await txnModal.submit();
 
     // ── ASSERT ──────────────────────────────────────────────────────────────

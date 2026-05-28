@@ -6,9 +6,9 @@
 
 | App | Path | Current | Live URL | Per-app changelog |
 |---|---|---|---|---|
-| **Consumer (React)** | `react/` | **v6.4.19** | https://react-taupe-xi.vercel.app | [`react/CHANGELOG.md`](react/CHANGELOG.md) |
-| **Admin** | `admin/` | **v1.0.7** | https://finflow-admin.vercel.app | [`admin/CHANGELOG.md`](admin/CHANGELOG.md) |
-| **Database (Supabase)** | `supabase/migrations/` | **admin-roles-and-kpis** | n/a — applied via Supabase MCP | [`db/MIGRATIONS.md`](db/MIGRATIONS.md) |
+| **Consumer (React)** | `react/` | **v6.4.25** | https://react-taupe-xi.vercel.app | [`react/CHANGELOG.md`](react/CHANGELOG.md) |
+| **Admin** | `admin/` | **v1.0.8** | https://finflow-admin.vercel.app | [`admin/CHANGELOG.md`](admin/CHANGELOG.md) |
+| **Database (Supabase)** | `supabase/migrations/` | **admin-rpcs** | n/a — applied via Supabase MCP | [`db/MIGRATIONS.md`](db/MIGRATIONS.md) |
 | **Vanilla shell (legacy consumer)** | `/` (root) | **v5.0** *(frozen)* | n/a — opens `index.html` directly | [§ Vanilla shell history](#vanilla-shell-history-v10--v50) below |
 
 The three apps deploy independently and are versioned independently. The vanilla shell at the repo root is kept available as the *original* FinFlow app from before the React port; it shares no code with the admin app.
@@ -21,6 +21,17 @@ Newest first. For full per-version detail, follow the link in the **App** column
 
 | Date | App | Version | Headline |
 |---|---|---|---|
+| 2026-05-24 | [Consumer](react/CHANGELOG.md#v6425--lead-review-pass--td-08-audit-triggers--td-04-extension-catch-up-remediation-pr-13-batch-2026-05-24) | **v6.4.25** | **Lead review pass over the dev's PR #13 batch — closes TD-08/09/10/12/13/15.** Adds TD-08 audit triggers (with the missing `memberships` + `search_path` corrections the dev's patch lacked); accepts TD-04-ext-a/b; documents the TD-04-ext-c scope deviation (dev wrote subscription/content mutation RPCs instead of the requested admin_list_users/weekly_trend/ai_usage_summary). Filename-case + e2e ID + schema-regen blockers all corrected. |
+| 2026-05-24 | db-migrations | audit-triggers | TD-08: server-side `activity_log` triggers on every domain table (incl. memberships, added during review) via `log_domain_activity()` SECURITY DEFINER function with `search_path` lockdown. |
+| 2026-05-24 | db-migrations | content-items | TD-04-ext-b: `content_items` + `content_favorites` tables + RLS; wires `publishedArticles` / `contentFavorites` into `admin_dashboard_kpis()`. |
+| 2026-05-24 | [Admin](admin/CHANGELOG.md#v108--slug-sanitiser-edge-case-fix-remediation-pr-3-2026-05-24) | **v1.0.8** | Slug sanitiser edge-case fix: `slugify()` now returns an empty string for punctuation-only inputs (ADM-UNIT-006). |
+| 2026-05-24 | [Consumer](react/CHANGELOG.md#v6420--td-15-mfa-enrolment-auth-hardening) | **v6.4.20** | TD-15: Add MFA enrolment helpers and a Security subsection in Settings; docs/AUTH_HARDENING.md added. |
+| 2026-05-24 | [Consumer](react/CHANGELOG.md#v6421--td-13-budgets-period-column-migration) | **v6.4.21** | TD-13: Add `period`/`period_start`/`period_end` columns to `budgets` (migration added). |
+| 2026-05-24 | [Consumer](react/CHANGELOG.md#v6422--td-09-atomic-replace_all-rpc--adapter-call) | **v6.4.22** | TD-09: Add server-side `replace_<entity>` RPCs and call them from the Supabase adapter for atomic bulk replace operations. |
+| 2026-05-24 | [Consumer](react/CHANGELOG.md#v6423--td-10-sync-status-badge--sidebar-mount) | **v6.4.23** | TD-10: Add a sidebar `SyncStatusBadge` to surface sync/queued/conflict state. |
+| 2026-05-24 | [Consumer](react/CHANGELOG.md#v6424--td-12-memoised-selectors--dashboard-updates) | **v6.4.24** | TD-12: Add memoized selectors and update Dashboard to use them. |
+| 2026-05-24 | db-migrations | subscriptions | Add `subscriptions` table and wire `paidSubscriptions`/`mrr` into `admin_dashboard_kpis()` (TD-04-ext-a). |
+| 2026-05-24 | db-migrations | admin-rpcs | Add admin RPCs for subscriptions & content (admin_list_subscriptions, admin_cancel_subscription, admin_publish_content_item) (TD-04-ext-c). |
 | 2026-05-23 | [Consumer](react/CHANGELOG.md#v6419--td-03-phase-b-concurrency-wired-across-all-crud--in-app-conflict-banner-remediation-pr-12-2026-05-23) | **v6.4.19** | **TD-03 phase B: concurrency wired across all CRUD + in-app conflict banner (remediation PR #12). Closes TD-03.** Budget/Goal/Debt/Asset interfaces gain `updated_at?`; row mappers thread it from the cloud; `upsertBudget/Goal/Debt/Asset` store actions pass it as the precondition on edits. New `SyncConflictBanner` mounted in Layout polls `pendingConflictCount()` every 5s and shows a banner with a Dismiss action when conflicts dead-letter. `HybridAdapter.clearConflicts()` added. Two household members editing the same row no longer silently overwrite each other anywhere in the app. |
 | 2026-05-23 | [Consumer](react/CHANGELOG.md#v6418--td-03-phase-a-optimistic-concurrency-at-the-cloud-boundary-remediation-pr-11-2026-05-23) | **v6.4.18** | **TD-03 phase A: optimistic concurrency at the cloud boundary (remediation PR #11).** SupabaseAdapter.upsert gains an optional `expectedUpdatedAt` precondition; when supplied, performs a guarded UPDATE and throws `ConcurrencyConflictError` if the cloud row has been touched since the caller's read. HybridAdapter dead-letters conflicts to `ff_sync_conflicts` and exposes `pendingConflictCount()`. Transactions edit is the first wired call site. 3 new tests (`CON-UNIT-051..053`). UI toast + the other 4 CRUD entities queued for PR #12. |
 | 2026-05-23 | [Consumer](react/CHANGELOG.md#v6417--td-01-phases-cd-decimal-money--amortisation--cloud-boundary-remediation-pr-10-2026-05-23) | **v6.4.17** | **TD-01 phases C+D: decimal money — amortisation + cloud boundary (remediation PR #10).** **Closes TD-01.** Phase C: `amortization.ts` carries outstanding balance as Dinero across 300-row schedules; `splitPayment(…, currency)` quantises both interest and principal. Phase D: new `parseMoneyFromCloud` helper centralises the supabaseAdapter row-mapper boundary; `types.ts` gains the TD-01 discipline doc block. 4 new pins (CON-UNIT-047/048/049/050); 5 existing tests tightened. |

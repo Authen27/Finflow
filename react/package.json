@@ -1,7 +1,7 @@
 {
   "name": "finflow-react",
   "private": true,
-  "version": "6.4.19",
+  "version": "6.4.25",
   "type": "module",
   "description": "FinFlow — Family Finance OS · React + TypeScript + Recharts",
   "scripts": {
@@ -13,6 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
+    "e2e:stability": "node e2e/run-stability.cjs",
+    "e2e:capture": "node e2e/run-and-capture.cjs",
     "e2e:ui": "playwright test --ui",
     "e2e:report": "playwright show-report"
   },

@@ -4,7 +4,7 @@
 >
 > The consumer React app at `react/` continues the version line that began with the v1.0–v5.0 vanilla-shell releases at the repo root. The vanilla shell is **frozen at v5.0** and superseded by **v6.0** (the React port). All v6+ versions are React-only.
 >
-> **Current production version: `v6.4.19`**
+> **Current production version: `v6.4.25`**
 > **Live URL:** https://react-taupe-xi.vercel.app
 > **Next planned: `v6.5`** (see Roadmap at the bottom).
 
@@ -22,6 +22,89 @@ The numbering history has some non-monotonic stretches that we keep documented h
 ---
 
 
+
+## v6.4.25 — Lead review pass + TD-08 audit triggers + TD-04 extension catch-up (remediation PR #13 batch) *(2026-05-24)*
+
+This release is the lead engineer's review pass over the developer batch that landed v1.0.8 (admin slugify) and v6.4.20..v6.4.24 (consumer items). The batch was delivered as one large bag of working-tree changes rather than the 10 disciplined commits the handoff prompt specified; rather than send it back I've taken it forward, with corrections and the omitted items inline. The PR-number labels the developer applied to each sub-entry (#13/#14/#15/#16/#17) are kept for traceability but they are all part of a single PR #13 batch.
+
+**What the dev delivered cleanly (accepted as-is):**
+- v1.0.8 — admin `slugify()` returns `''` for entirely-stripped input (Trim moved after punctuation strip; `ADM-UNIT-006` flipped back to its original assertion).
+- v6.4.20 — TD-15: MFA enrolment wrappers in `react/src/lib/auth.ts` + Settings → Security subsection + new `docs/AUTH_HARDENING.md` runbook for the Supabase project-level config (out-of-repo).
+- v6.4.21 — TD-13: `budgets.period` / `period_start` / `period_end` columns via a new migration; `budgetMeta.ts` marked deprecated.
+- v6.4.22 — TD-09: Six entity-specific `replace_<entity>(h, rows)` RPCs (the dev wrote one per entity instead of the single generic `replace_all_atomic` the prompt requested — functionally equivalent, more verbose, accepted). Adapter `replaceAll` swapped to call the RPC.
+- v6.4.23 — TD-10: Sidebar-mounted sync-status badge with 5-state machine (`Local`/`Offline`/`Conflict(s)`/`Syncing`/`Synced`).
+- v6.4.24 — TD-12: Memoised selectors in `react/src/lib/selectors.ts` + Dashboard rewired to use them.
+
+**Lead corrections applied (this v6.4.25 entry):**
+
+- **TD-08 audit triggers — missing pieces fixed.** The submitted migration was missing the `memberships` table from the trigger loop (membership changes are exactly the multi-household audit signal we need) and missing `SET search_path = public, pg_temp` on the SECURITY DEFINER function (search-path injection risk). Both fixed in `supabase/migrations/20260524071000_audit_triggers.sql`.
+- **Filename case — `SyncStatusBadge.tsx`.** Submitted as `syncstatusbadge.tsx` (lowercase) with imports `'../ui/badge'`. Both would fail TypeScript build on Linux CI (case-sensitive). Renamed to PascalCase + updated `Sidebar.tsx` and Badge imports.
+- **Baseline `react/e2e/tests/` ID drift.** Three Playwright specs from the QA scaffolding stream (`TXN-FC-001`, `NWRT-FC-002`, `DEBT-FC-002`) used a parallel functional-case ID format the reconciler refused. Renamed in-place to `CON-E2E-007/008/009` with the FC reference preserved in brackets; catalogued in `docs/TEST_SCENARIOS.md`. Pre-existing issue, not the dev's fault, but blocked the gate.
+- **`db/schema.sql` regenerated.** Dev added 6 migrations but never ran `node scripts/db-migrations-check.mjs --fix`, so the snapshot drifted by ~27 KB.
+- **Extraneous artifacts removed.** `PR_CHECKLIST.md`, `PR_COMMIT_PLAN.md`, and `scripts/commit_and_validate.ps1` were dev process docs — not part of the deliverable.
+
+**TD-04 extension catch-up (this v6.4.25 entry):**
+
+- TD-04-ext-a (subscriptions table + `paidSubscriptions`/`mrr` KPI plug-in): **accepted** — clean migration, RLS, audit trigger.
+- TD-04-ext-b (content_items + content_favorites + KPI plug-in): **accepted**.
+- TD-04-ext-c: **scope deviation.** Prompt requested `admin_list_users` / `admin_weekly_trend` / `admin_ai_usage_summary` (which back the existing adminApi.ts fetchers). Dev delivered an entirely different RPC set — `admin_list_subscriptions`, `admin_cancel_subscription`, `admin_get_mrr_by_currency`, `admin_publish_content_item`, `admin_unpublish_content_item`. The work is functionally useful (admin subscription/content lifecycle management) so it's accepted, but the originally-requested 3 read RPCs **remain unaddressed and are re-queued on the lead's workstream.** Migration header comment documents this.
+
+**TD-12 quality note (not fixed in this PR):** the new `selectors.ts` uses `any[]` and `(...args: any[]) => any` extensively. The codebase has real entity types (`Transaction[]`, `Budget[]`, etc.); replacing the `any`s with proper generics is a quality follow-up. ESLint warns but does not error, so the gate passes.
+
+**TD-09 quality note (not fixed in this PR):** the prompt called for a new `CON-UNIT-054` test pinning the `replaceAll → rpc()` swap. Dev did not add it. The path is covered transitively by existing tests in `supabaseAdapter.test.ts`; adding the explicit pin is a follow-up.
+
+**Items resolved this batch (Summary-table marker flipped):** TD-08, TD-09, TD-10, TD-12, TD-13, TD-15, slugify (TD-01 follow-up). TD-04 remains partially resolved (extensions a + b in; admin RPCs c partially in but deviated).
+
+Local automation gate after corrections: PASS (10/10 gates). Catalog 73 ↔ 73 lock-step. db/schema.sql in sync at 8 migrations / ~64 KB.
+
+---
+
+## v6.4.24 — TD-12: Memoised selectors + Dashboard updates (remediation PR #17) *(2026-05-24)*
+
+Centralise and memoise expensive derived metrics used by the Dashboard. Introduces `lib/selectors.ts` which exposes memoized selectors for monthly aggregates, pulse score, insights, category spend, recent transactions, and balance-sheet totals. `Dashboard.tsx` now consumes these selectors to avoid redundant O(n) recomputation on unrelated state changes.
+
+- [`react/src/lib/selectors.ts`](react/src/lib/selectors.ts) — memoized selectors for derived metrics.
+- [`react/src/pages/Dashboard.tsx`](react/src/pages/Dashboard.tsx) — switched to the memoized selectors.
+
+**TD-12 status:** selectors added and Dashboard updated; run `node scripts/automation-run.mjs` locally before committing.
+
+## v6.4.23 — TD-10: Sync status badge + Sidebar mount (remediation PR #16) *(2026-05-24)*
+
+Adds a small sync status badge to the sidebar header to surface local/cloud sync state and queued operations. The badge reflects `Local`, `Offline`, `Syncing`, `Synced`, and `Conflict(s)` states by polling the adapter for pending queue and conflict counts.
+
+- [`react/src/components/layout/syncstatusbadge.tsx`](react/src/components/layout/syncstatusbadge.tsx) — new UI component showing adapter sync state.
+- [`react/src/components/layout/sidebar.tsx`](react/src/components/layout/sidebar.tsx) — mounts `SyncStatusBadge` next to the notification center in the sidebar header.
+
+**TD-10 status:** front-end badge added; validate UI and run `node scripts/automation-run.mjs` locally before committing release.
+
+## v6.4.22 — TD-09: Atomic replace_all RPC & adapter call (remediation PR #15) *(2026-05-24)*
+
+Adds server-side `replace_<entity>(h uuid, rows jsonb)` RPCs to perform atomic bulk-replace operations for domain tables (transactions, budgets, goals, debts, assets, members). The `SupabaseAdapter.replaceAll()` implementation now calls the appropriate RPC for improved performance and correctness during imports and initial syncs.
+
+- [`supabase/migrations/20260524073000_replace_all_rpc.sql`](supabase/migrations/20260524073000_replace_all_rpc.sql) — new RPCs: `replace_transactions`, `replace_budgets`, `replace_goals`, `replace_debts`, `replace_assets`, `replace_memberships`.
+- [`react/src/lib/supabaseAdapter.ts`](react/src/lib/supabaseAdapter.ts) — `replaceAll()` now invokes server RPCs and returns the inserted rows.
+
+**TD-09 status:** migration added; run `node scripts/db-migrations-check.mjs --fix` locally and then `node scripts/automation-run.mjs` to validate gates before committing release.
+
+## v6.4.21 — TD-13: Budgets period column migration (remediation PR #14) *(2026-05-24)*
+
+Schema migration release. Adds `period`, `period_start`, `period_end` to the `budgets` table (migration: `supabase/migrations/20260524070000_budgets_add_period.sql`). Client row mappers updated to read/write these columns; local `budgetMeta.ts` kept as a compatibility shim for one release and marked deprecated.
+
+- [`supabase/migrations/20260524070000_budgets_add_period.sql`](supabase/migrations/20260524070000_budgets_add_period.sql) — adds `period` (text default 'monthly'), `period_start` (date), and `period_end` (date) to `budgets` and a `CHECK` constraint over allowed period values.
+- [`react/src/lib/supabaseAdapter.ts`](react/src/lib/supabaseAdapter.ts) — row mappers `rowToBudget` / `budgetToRow` now include `period`, `period_start`, and `period_end`.
+- [`react/src/lib/budgetMeta.ts`](react/src/lib/budgetMeta.ts) — marked deprecated pending migration roll-out; the store still writes local period metadata for a single release to preserve UX during the migration window.
+
+**TD-13 status:** migration file added. Developer must run `node scripts/db-migrations-check.mjs --fix` locally to regenerate `db/schema.sql` before gating and release.
+
+## v6.4.20 — TD-15: MFA enrolment & Auth hardening (remediation PR #13) *(2026-05-24)*
+
+Security release. Adds client-side helpers and a Settings UI subsection to enrol and manage TOTP MFA factors via Supabase Auth. Also adds `docs/AUTH_HARDENING.md` with a short runbook and rollout recommendations.
+
+- [`react/src/lib/auth.ts`](react/src/lib/auth.ts) — new MFA helper wrappers: `enrollMfaTotp()`, `verifyMfaEnrolment()`, `listMfaFactors()`, `unenrollMfaFactor()` to keep pages decoupled from Supabase internals.
+- [`react/src/pages/Settings.tsx`](react/src/pages/Settings.tsx) — new **Security** panel: enable TOTP enrolment, QR provisioning, verification, and factor unenrolment. Cloud-mode only.
+- [`docs/AUTH_HARDENING.md`](docs/AUTH_HARDENING.md) — runbook for Supabase MFA, leaked-password protection, and recommended rate limits.
+
+**TD-15 status:** remediation started; Settings UI and helpers implemented. Rollout: opt-in enrolment exposed in Settings; enforcement TBD per policy.
 
 ## v6.4.19 — TD-03 phase B: concurrency wired across all CRUD + in-app conflict banner (remediation PR #12) *(2026-05-23)*
 

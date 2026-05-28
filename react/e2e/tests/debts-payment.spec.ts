@@ -26,7 +26,7 @@ const seed = seedWith({ debts: [sampleCreditCardDebt] });
 test.describe('§7 DEBT-FC · Debt Payment Cascading', () => {
   test.use({ seed });
 
-  test('DEBT-FC-002 · payment splits interest and principal at the configured APR', async ({
+  test('CON-E2E-008 · [DEBT-FC-002] payment splits interest and principal at the configured APR', async ({
     page, debts,
   }) => {
     // ── ARRANGE ─────────────────────────────────────────────────────────────

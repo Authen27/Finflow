@@ -1,3 +1,12 @@
+-- ════════════════════════════════════════════════════════════════
+-- ⚠ SUPERSEDED — DO NOT APPLY (TD-20, PR #16)
+--
+-- ⚠ NOT IN PRODUCTION. This was design intent for TD-08 but was never
+-- applied. Re-land as a fresh additive migration with a new timestamp
+-- AFTER the TD-20 baseline is reconciled. Do not move this file back
+-- into supabase/migrations/. See db/migrations-superseded/README.md.
+-- ════════════════════════════════════════════════════════════════
+
 -- TD-08: Populate activity_log from domain CRUD (transactions, budgets, goals, debts, assets, memberships)
 -- Creates a trigger function that inserts an activity_log row on INSERT/UPDATE/DELETE.
 --

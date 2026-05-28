@@ -1,6 +1,7 @@
 name: Deploy
 
-# Auto-deploy both apps to Vercel on push to main.
+# Auto-deploy both apps to Vercel on push to main, after applying any
+# pending Supabase migrations.
 # Setup needed once (see DEPLOY.md):
 #   • In each Vercel project: Settings → Git → connect this repo
 #   • In GitHub: add these secrets at Settings → Secrets and variables → Actions:
@@ -11,6 +12,9 @@ name: Deploy
 #       VITE_SUPABASE_URL         (Supabase project URL — injected at build time)
 #       VITE_SUPABASE_ANON_KEY    (Supabase anon key — injected at build time)
 #       VITE_APP_URL              (consumer app URL, e.g. https://react-taupe-xi.vercel.app)
+#       SUPABASE_ACCESS_TOKEN     (personal access token — https://supabase.com/dashboard/account/tokens)
+#       SUPABASE_PROJECT_REF      (the ref shown in the project URL, e.g. abcd1234efgh5678)
+#       SUPABASE_DB_PASSWORD      (DB password for the production project — Settings → Database)
 
 on:
   push:
@@ -22,7 +26,33 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # TD-20 (PR #16) — apply any pending Supabase migrations BEFORE the apps
+  # deploy. `supabase db push` is idempotent against the remote
+  # `supabase_migrations.schema_migrations` tracker: it only applies
+  # migrations the tracker hasn't already recorded. The TD-20 baseline
+  # itself is pre-inserted into the tracker so production isn't touched
+  # on the first run after PR #16.
+  db-migrations:
+    name: Apply Supabase migrations
+    runs-on: ubuntu-latest
+    environment: production-database
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - name: Validate migrations directory (CI-style gate)
+        run: node scripts/db-migrations-check.mjs
+      - name: Link project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}" --password "${{ secrets.SUPABASE_DB_PASSWORD }}"
+      - name: Push pending migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase db push --password "${{ secrets.SUPABASE_DB_PASSWORD }}" --include-all
+
   consumer:
+    needs: db-migrations
     name: Deploy consumer (react/)
     runs-on: ubuntu-latest
     environment:
@@ -58,6 +88,7 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_CONSUMER_PROJECT_ID }}
 
   admin:
+    needs: db-migrations
     name: Deploy admin (admin/)
     runs-on: ubuntu-latest
     environment:

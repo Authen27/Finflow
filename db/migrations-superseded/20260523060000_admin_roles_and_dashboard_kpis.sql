@@ -1,3 +1,12 @@
+-- ════════════════════════════════════════════════════════════════
+-- ⚠ SUPERSEDED — DO NOT APPLY (TD-20, PR #16)
+--
+-- Applied to prod via the Dashboard with a different KPI shape; the
+-- live shape is captured in
+-- supabase/migrations/00000000000001_production_state_baseline.sql.
+-- Kept here for git history only. See db/migrations-superseded/README.md.
+-- ════════════════════════════════════════════════════════════════
+
 -- TD-04 — version-control the privileged admin surface.
 --
 -- Brings the admin authorisation layer + the dashboard KPIs RPC into a

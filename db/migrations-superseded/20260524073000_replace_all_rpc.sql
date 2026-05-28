@@ -1,3 +1,12 @@
+-- ════════════════════════════════════════════════════════════════
+-- ⚠ SUPERSEDED — DO NOT APPLY (TD-20, PR #16)
+--
+-- ⚠ NOT IN PRODUCTION. This was design intent for TD-09 but was never
+-- applied. Re-land as a fresh additive migration with a new timestamp
+-- AFTER the TD-20 baseline is reconciled. Do not move this file back
+-- into supabase/migrations/. See db/migrations-superseded/README.md.
+-- ════════════════════════════════════════════════════════════════
+
 -- TD-09: Atomic replace RPCs for bulk imports
 -- Adds `replace_<entity>(h uuid, rows jsonb)` functions that soft-delete
 -- existing rows for a household and insert the provided rows inside a

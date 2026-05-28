@@ -8,7 +8,7 @@
 |---|---|---|---|---|
 | **Consumer (React)** | `react/` | **v6.4.25** | https://react-taupe-xi.vercel.app | [`react/CHANGELOG.md`](react/CHANGELOG.md) |
 | **Admin** | `admin/` | **v1.0.8** | https://finflow-admin.vercel.app | [`admin/CHANGELOG.md`](admin/CHANGELOG.md) |
-| **Database (Supabase)** | `supabase/migrations/` | **admin-rpcs** | n/a — applied via Supabase MCP | [`db/MIGRATIONS.md`](db/MIGRATIONS.md) |
+| **Database (Supabase)** | `supabase/migrations/` | **admin-read-rpcs-and-ai-usage** | n/a — applied via Supabase MCP | [`db/MIGRATIONS.md`](db/MIGRATIONS.md) |
 | **Vanilla shell (legacy consumer)** | `/` (root) | **v5.0** *(frozen)* | n/a — opens `index.html` directly | [§ Vanilla shell history](#vanilla-shell-history-v10--v50) below |
 
 The three apps deploy independently and are versioned independently. The vanilla shell at the repo root is kept available as the *original* FinFlow app from before the React port; it shares no code with the admin app.
@@ -21,6 +21,7 @@ Newest first. For full per-version detail, follow the link in the **App** column
 
 | Date | App | Version | Headline |
 |---|---|---|---|
+| 2026-05-24 | db-migrations | admin-read-rpcs-and-ai-usage | **TD-04 closes — final piece (remediation PR #14).** Ships `ai_usage` table (privacy-safe: intent + sentiment score + length only, never content) + RLS + the three originally-requested admin READ RPCs: `admin_list_users()`, `admin_weekly_trend(weeks)`, `admin_ai_usage_summary()`. Plug straight into the existing `admin/src/lib/adminApi.ts` fetchers — Users page, Dashboard trend chart, and Intelligence page now have real data. |
 | 2026-05-24 | [Consumer](react/CHANGELOG.md#v6425--lead-review-pass--td-08-audit-triggers--td-04-extension-catch-up-remediation-pr-13-batch-2026-05-24) | **v6.4.25** | **Lead review pass over the dev's PR #13 batch — closes TD-08/09/10/12/13/15.** Adds TD-08 audit triggers (with the missing `memberships` + `search_path` corrections the dev's patch lacked); accepts TD-04-ext-a/b; documents the TD-04-ext-c scope deviation (dev wrote subscription/content mutation RPCs instead of the requested admin_list_users/weekly_trend/ai_usage_summary). Filename-case + e2e ID + schema-regen blockers all corrected. |
 | 2026-05-24 | db-migrations | audit-triggers | TD-08: server-side `activity_log` triggers on every domain table (incl. memberships, added during review) via `log_domain_activity()` SECURITY DEFINER function with `search_path` lockdown. |
 | 2026-05-24 | db-migrations | content-items | TD-04-ext-b: `content_items` + `content_favorites` tables + RLS; wires `publishedArticles` / `contentFavorites` into `admin_dashboard_kpis()`. |

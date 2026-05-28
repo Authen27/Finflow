@@ -1,3 +1,14 @@
+-- ════════════════════════════════════════════════════════════════
+-- ⚠ SUPERSEDED — DO NOT APPLY (TD-20, PR #16)
+--
+-- A different set of admin RPCs ended up in prod
+-- (admin_list_users, admin_weekly_trend, admin_ai_usage_summary) —
+-- those are captured in
+-- supabase/migrations/00000000000001_production_state_baseline.sql.
+-- The RPCs in this file were never applied. Kept here for git history
+-- only. See db/migrations-superseded/README.md.
+-- ════════════════════════════════════════════════════════════════
+
 -- Admin-side RPCs for subscription / content lifecycle management.
 --
 -- Review note (lead, PR #13): the dev who delivered this batch wrote a

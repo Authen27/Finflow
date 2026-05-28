@@ -1,3 +1,12 @@
+-- ════════════════════════════════════════════════════════════════
+-- ⚠ SUPERSEDED — DO NOT APPLY (TD-20, PR #16)
+--
+-- A `subscriptions` table exists in prod with a different shape (e.g.
+-- `current_period_end` instead of `period_end`). The live shape is
+-- captured in supabase/migrations/00000000000001_production_state_baseline.sql.
+-- Kept here for git history only. See db/migrations-superseded/README.md.
+-- ════════════════════════════════════════════════════════════════
+
 -- TD-04-ext-a: Subscriptions table + admin KPI wiring
 -- Adds `subscriptions` table used by admin UI and the `paidSubscriptions`/`mrr` KPI.
 

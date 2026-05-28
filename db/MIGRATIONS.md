@@ -8,6 +8,18 @@
 Owner: Engineering. Adopted: 2026-05-23 (Remediation PR #3 / **TD-18**).
 Governance: [`docs/TEST_GOVERNANCE.md`](../docs/TEST_GOVERNANCE.md).
 
+> ✅ **TD-20 reconciliation landed (PR #16, 2026-05-28).** The earlier drift —
+> repo migrations on one history, production reshaped via the Supabase
+> Dashboard on another — has been closed by capturing the live prod state as
+> a single baseline at
+> [`supabase/migrations/00000000000001_production_state_baseline.sql`](../supabase/migrations/00000000000001_production_state_baseline.sql).
+> The eight pre-PR-#16 design-intent migrations have been moved out of the
+> apply path to [`db/migrations-superseded/`](migrations-superseded/) (kept
+> for git history, never re-applied). From PR #16 onward, the repo and the
+> live database agree, and `supabase db push` from the deploy workflow is
+> the supported apply mechanism. See the **TD-20** entry in
+> [`TECH_DEBT.md`](../TECH_DEBT.md) for the full reconciliation history.
+
 ---
 
 ## 1. Why this exists
@@ -33,11 +45,12 @@ that refuses drift.
 ```
 supabase/
   migrations/
-    00000000000000_initial_schema.sql      # baseline — current production shape
-    <YYYYMMDDHHMMSS>_<snake_name>.sql      # every subsequent change
+    00000000000001_production_state_baseline.sql  # baseline — actual prod state (PR #16)
+    <YYYYMMDDHHMMSS>_<snake_name>.sql             # every subsequent additive change
 db/
   schema.sql                                # GENERATED — concat of the above
   MIGRATIONS.md                             # this file
+  migrations-superseded/                    # archived design-intent migrations (TD-20)
 ```
 
 **Naming rules** (enforced by `scripts/db-migrations-check.mjs`):

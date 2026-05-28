@@ -1,4 +1,14 @@
 -- ════════════════════════════════════════════════════════════════
+-- ⚠ SUPERSEDED — DO NOT APPLY (TD-20, PR #16)
+--
+-- This file was the original PR #6 repo baseline but was never applied
+-- to production. The real prod state is captured in
+-- supabase/migrations/00000000000001_production_state_baseline.sql.
+-- Kept here for git history / design provenance only.
+-- See db/migrations-superseded/README.md.
+-- ════════════════════════════════════════════════════════════════
+
+-- ════════════════════════════════════════════════════════════════
 -- FinFlow · Cloud schema for Supabase (Postgres 15+)
 -- Run this in: Supabase Dashboard → SQL Editor → New query
 -- ════════════════════════════════════════════════════════════════

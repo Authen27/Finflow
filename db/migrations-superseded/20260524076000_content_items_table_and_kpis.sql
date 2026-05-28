@@ -1,3 +1,11 @@
+-- ════════════════════════════════════════════════════════════════
+-- ⚠ SUPERSEDED — DO NOT APPLY (TD-20, PR #16)
+--
+-- Applied to prod via the Dashboard. The tables this migration added
+-- are reflected in supabase/migrations/00000000000001_production_state_baseline.sql.
+-- Kept here for git history only. See db/migrations-superseded/README.md.
+-- ════════════════════════════════════════════════════════════════
+
 -- TD-04-ext-b: Content items + favorites tables + admin KPI wiring
 -- Adds `content_items` and `content_favorites` for the help/content module,
 -- enables RLS, attaches audit triggers (if present), and updates

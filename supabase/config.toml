@@ -1,0 +1,13 @@
+# Supabase project config — used by `supabase link` / `supabase db push`
+# to identify the remote project. This repo only uses the CLI for the
+# deploy-time `db push` against the production project; we do NOT run the
+# local Supabase stack here, so the [api], [db], [auth] etc. sections that
+# `supabase init` would scaffold are intentionally omitted.
+#
+# Owner: Engineering. Adopted: 2026-05-29 (Hotfix PR #18 / TD-20 follow-up).
+#
+# To bump or add local-stack config, run `supabase init` in a scratch dir
+# and copy the sections you actually need. Don't add sections you aren't
+# using — every block is one more thing the CLI parses and validates.
+
+project_id = "dmxqkvploojokffuhxnz"

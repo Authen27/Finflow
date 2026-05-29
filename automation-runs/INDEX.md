@@ -7,3 +7,4 @@
 | Finished (UTC) | Verdict | Branch | Commit | Runner | Report |
 |---|---|---|---|---|---|
 | 2026-05-28T17:06:37.592Z | ✅ PASS | `td-20-prod-baseline` | `5a90b6e` | local | 64/64 | [report](2026-05-28T16-56-13-766Z__5a90b6e/report.md) |
+| 2026-05-29T06:07:50.563Z | ❌ FAIL | `design-money-typography-standardize` | `e02b2b4` | local | 64/64 | [report](2026-05-29T06-03-14-392Z__e02b2b4/report.md) |

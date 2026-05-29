@@ -6,7 +6,7 @@
 
 | App | Path | Current | Live URL | Per-app changelog |
 |---|---|---|---|---|
-| **Consumer (React)** | `react/` | **v6.4.25** | https://react-taupe-xi.vercel.app | [`react/CHANGELOG.md`](react/CHANGELOG.md) |
+| **Consumer (React)** | `react/` | **v6.4.26** | https://react-taupe-xi.vercel.app | [`react/CHANGELOG.md`](react/CHANGELOG.md) |
 | **Admin** | `admin/` | **v1.0.8** | https://finflow-admin.vercel.app | [`admin/CHANGELOG.md`](admin/CHANGELOG.md) |
 | **Database (Supabase)** | `supabase/migrations/` | **production-baseline** | n/a — auto-applied by `deploy.yml` via `supabase db push` (TD-20 / PR #16) | [`db/MIGRATIONS.md`](db/MIGRATIONS.md) |
 | **Vanilla shell (legacy consumer)** | `/` (root) | **v5.0** *(frozen)* | n/a — opens `index.html` directly | [§ Vanilla shell history](#vanilla-shell-history-v10--v50) below |
@@ -21,6 +21,7 @@ Newest first. For full per-version detail, follow the link in the **App** column
 
 | Date | App | Version | Headline |
 |---|---|---|---|
+| 2026-05-29 | [Consumer](react/CHANGELOG.md#v6426--money-typography-standardisation-one-canonical-figure-style-across-all-sections-2026-05-29) | **v6.4.26** | **Money typography standardisation.** One canonical `.num` figure style (non-italic Inter Tight, tabular + lining numerals) for every amount across Dashboard, Budgets, Splits, Transactions, Net Worth, Debts, Reports — replacing the previous mix of italic-serif KPI/hero numbers, mono transaction rows, and plain non-tabular sans totals. `<Money>` now applies `.num` automatically; headings stay editorial italic; dense numeric tables stay mono. Purely visual — no value/format change. |
 | 2026-05-28 | [Database](db/MIGRATIONS.md) | **production-baseline** | **TD-20 reconciliation — closes TD-20 (PR #16).** Captures actual production schema as a single new baseline (`00000000000001_production_state_baseline.sql`, ~46 KB: 16 tables, 18 indexes, ~55 RLS policies, 15 functions incl. the live admin RPCs, 12 triggers). The earlier 8 design-intent migrations move to `db/migrations-superseded/` (out of the apply path, kept for git history). New `db-migrations` job in `deploy.yml` runs `supabase db push --include-all` before the app deploy jobs so the apply step is no longer manual. Baseline pre-recorded in `supabase_migrations.schema_migrations` so the first deploy is a verified no-op against prod. |
 | 2026-05-24 | [Consumer](react/CHANGELOG.md#v6425--lead-review-pass--td-08-audit-triggers--td-04-extension-catch-up-remediation-pr-13-batch-2026-05-24) | **v6.4.25** | **Lead review pass over the dev's PR #13 batch — closes TD-08/09/10/12/13/15.** Adds TD-08 audit triggers (with the missing `memberships` + `search_path` corrections the dev's patch lacked); accepts TD-04-ext-a/b; documents the TD-04-ext-c scope deviation (dev wrote subscription/content mutation RPCs instead of the requested admin_list_users/weekly_trend/ai_usage_summary). Filename-case + e2e ID + schema-regen blockers all corrected. |
 | 2026-05-24 | db-migrations | audit-triggers | TD-08: server-side `activity_log` triggers on every domain table (incl. memberships, added during review) via `log_domain_activity()` SECURITY DEFINER function with `search_path` lockdown. |

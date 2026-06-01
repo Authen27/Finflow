@@ -1,4 +1,4 @@
-# FinFlow — Master Version History
+# Vyact — Master Version History
 
 > **Parent / master changelog.** Per-app detail lives in each app's own `CHANGELOG.md`; this document is the single index that tells you what's installed, what shipped where, and what's coming next.
 
@@ -6,8 +6,8 @@
 
 | App | Path | Current | Live URL | Per-app changelog |
 |---|---|---|---|---|
-| **Consumer (React)** | `react/` | **v6.6.0** | https://react-three-puce-61.vercel.app | [`react/CHANGELOG.md`](react/CHANGELOG.md) |
-| **Admin** | `admin/` | **v1.0.8** | https://admin-six-orpin-47.vercel.app | [`admin/CHANGELOG.md`](admin/CHANGELOG.md) |
+| **Consumer (React)** | `react/` | **v7.0.0** | https://vyact-twentyx.vercel.app | [`react/CHANGELOG.md`](react/CHANGELOG.md) |
+| **Admin** | `admin/` | **v1.1.0** | https://vyact-admin.vercel.app | [`admin/CHANGELOG.md`](admin/CHANGELOG.md) |
 | **Database (Supabase)** | `supabase/migrations/` | **td-08-09-13-honest-residuals** | n/a — auto-applied by `deploy.yml` via `supabase db push` (TD-20 / PR #16) | [`db/MIGRATIONS.md`](db/MIGRATIONS.md) |
 | **Vanilla shell (legacy consumer)** | `/` (root) | **v5.0** *(frozen)* | n/a — opens `index.html` directly | [§ Vanilla shell history](#vanilla-shell-history-v10--v50) below |
 
@@ -23,6 +23,8 @@ Newest first. For full per-version detail, follow the link in the **App** column
 
 | Date | App | Version | Headline |
 |---|---|---|---|
+| 2026-06-01 | [Consumer](react/CHANGELOG.md#v700--rebrand-finflow--vyact-2026-06-01) | **v7.0.0** | **Rebrand: FinFlow → Vyact.** Full consumer app rename — titles, meta, PWA manifest, localStorage keys (`vt_` prefix with `ff_` compat shim), export filenames, env URLs, X-Client-Info header. Repo renamed to Vyact on GitHub. Historical changelog entries preserved. No schema changes; no data migration required. |
+| 2026-06-01 | [Admin](admin/CHANGELOG.md) | **v1.1.0** | **Admin rebrand to Vyact.** Titles, meta, supabase client header updated. |
 | 2026-05-30 | [Consumer](react/CHANGELOG.md#v660--earnable-pulse-score--google-sign-in--reset-without-email-2026-05-30) | **v6.6.0** | **Earnable Pulse Score + Google sign-in + reset-without-email.** Pulse Score (plan 09) drops the arbitrary component defaults that pinned empty accounts at ~55: each component is scored only when it has data and the weights renormalise, so an empty account reads `null` → gauge shows "— / No data yet" instead of a fake number; `PulseGauge` respects `prefers-reduced-motion`. Adds a `GoogleButton` (plan 11, gated on `isCloudEnabled`) to Sign In / Sign Up / Reset — needs the Supabase Google provider configured before it works (dashboard step, not in this code release). Password reset (plan 07) gains Google + magic-link fallbacks + a no-cloud state so it never dead-ends without SMTP. `aiSummary.ts` widened to accept `pulseScore.total: number\|null`. Lint clean, build green; no schema change (plan-10 migration ships separately). |
 | 2026-05-30 | [Consumer](react/CHANGELOG.md#v651--in-app-new-version-available-update-prompt-2026-05-30) | **v6.5.1** | **In-app "new version available" update prompt.** Fixes deploys not reaching long-lived tabs (the v6.5.0 footer-stuck confusion). Build stamps `dist/version.json`; a new `UpdateBanner` polls it (`no-store`, on load/focus/15-min) and prompts Refresh when the deployed version differs from the running `__APP_VERSION__`. No service worker involved; purely additive UI. |
 | 2026-05-30 | [Consumer](react/CHANGELOG.md#v650--e2e-test-automation-foundation-batch-12--test-build-cloud-leak-fix-2026-05-30) | **v6.5.0** | **E2E test automation foundation + test-build cloud-leak fix (non-functional release).** No runtime/UI change. Lands the Playwright E2E suite (20 passed / 3 skipped on chromium) covering Transaction Creation, Budgets, and Debt payment math, with Page Objects, deterministic fixtures, and the test-case inventory (`react/e2e/TEST_CASE_INVENTORY.md`, 20/163 developed) as the QA source of truth. Adds a11y groundwork that also stabilises test locators (`Modal` `role="dialog"`/`aria-labelledby`, `Field` `htmlFor`/`id`). Build fix: the v6.4.27 production Supabase `FALLBACK_URL/KEY` was applied on the e2e `--mode test` build too, flipping the test app into cloud mode and gating every route behind `/auth/sign-in`; the fallback is now skipped when `MODE === 'test'` — real production (`MODE === 'production'`) is unchanged. |

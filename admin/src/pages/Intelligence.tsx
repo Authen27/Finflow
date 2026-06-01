@@ -1,4 +1,4 @@
-// FinFlow Admin — AI Assistant Intelligence
+// Vyact Admin — AI Assistant Intelligence
 // Reads admin_ai_usage_summary() (SECURITY DEFINER, admin-gated). Every figure is
 // derived from the privacy-safe ai_usage table: intent + sentiment + length only,
 // never any message content. Used to segment user types for the business.
@@ -65,9 +65,9 @@ export default function Intelligence() {
           <div className="font-mono text-[0.6rem] tracking-[0.18em] uppercase text-claude mb-1.5 flex items-center gap-1.5">
             <Brain size={12} /> AI Assistant Intelligence
           </div>
-          <h1 className="display-serif text-4xl text-ink mb-1">How members talk to FinFlow</h1>
+          <h1 className="display-serif text-4xl text-ink mb-1">How members talk to Vyact</h1>
           <p className="text-ink-mid text-[0.92rem] max-w-2xl">
-            Intent &amp; sentiment of Ask-FinFlow conversations, used to segment user types.
+            Intent &amp; sentiment of Ask-Vyact conversations, used to segment user types.
             Privacy-safe — only intent, sentiment and message length are stored, never message content.
           </p>
         </div>
@@ -85,7 +85,7 @@ export default function Intelligence() {
 
       {!error && !loading && data && data.total === 0 && (
         <div className="panel p-6 mb-5 text-ink-mid text-sm">
-          No AI interactions logged yet. Once members use <strong>Ask FinFlow</strong> in the
+          No AI interactions logged yet. Once members use <strong>Ask Vyact</strong> in the
           consumer app, intent and sentiment signals will appear here.
         </div>
       )}

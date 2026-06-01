@@ -1,4 +1,4 @@
-// FinFlow Admin — global state
+// Vyact Admin — global state
 // v6.2.3 — extended with Supabase session + server-side role hydrated from
 // public.admin_roles. The `role` field is now derived from the server, not
 // from a localStorage spoof — but the localStorage value is kept as a

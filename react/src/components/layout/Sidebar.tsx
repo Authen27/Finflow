@@ -66,13 +66,13 @@ export default function Sidebar({ open, onClose }: Props) {
             to="/dashboard"
             onClick={() => { if (window.innerWidth < 1024) onClose(); }}
             className="flex items-center gap-2.5 flex-1 min-w-0 group rounded-md -mx-1 px-1 py-1 transition-colors hover:bg-coral-tint/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/40"
-            aria-label="FinFlow — go to dashboard"
+            aria-label="Vyact — go to dashboard"
             title="Dashboard"
           >
             <Logo />
             <div className="text-2xl text-ink leading-none flex-1 group-hover:text-ink"
                  style={{ fontFamily: 'var(--ff-serif)', fontWeight: 500, letterSpacing: '-0.015em' }}>
-              Fin<span style={{ fontStyle: 'italic', color: 'var(--ff-coral)' }}>Flow</span>
+              Vy<span style={{ fontStyle: 'italic', color: 'var(--ff-coral)' }}>act</span>
             </div>
           </Link>
           <div className="hidden lg:flex items-center gap-2">
@@ -157,7 +157,7 @@ export default function Sidebar({ open, onClose }: Props) {
           {cloudEnabled && session && (
             <button
               onClick={async () => {
-                if (confirm('Sign out of FinFlow?')) {
+                if (confirm('Sign out of Vyact?')) {
                   try { await authSignOut(); }
                   catch { /* even on error, the auth listener clears state */ }
                 }

@@ -1,11 +1,11 @@
-# FinFlow Consumer App — Changelog
+# Vyact Consumer App — Changelog
 
 > Versioning record for the React consumer app at `react/`. Newest first.
 >
 > The consumer React app at `react/` continues the version line that began with the v1.0–v5.0 vanilla-shell releases at the repo root. The vanilla shell is **frozen at v5.0** and superseded by **v6.0** (the React port). All v6+ versions are React-only.
 >
-> **Current production version: `v6.6.0`**
-> **Live URL:** https://react-three-puce-61.vercel.app
+> **Current production version: `v7.0.0`**
+> **Live URL:** https://vyact-twentyx.vercel.app
 > **Next planned: see Roadmap at the bottom.**
 
 ## Version provenance & gaps
@@ -22,6 +22,40 @@ The numbering history has some non-monotonic stretches that we keep documented h
 ---
 
 
+
+## v7.0.0 — Rebrand: FinFlow → Vyact *(2026-06-01)*
+
+First release under the Vyact brand. Product rename from FinFlow to Vyact across
+the entire consumer app. All core functionality is unchanged; this release is
+exclusively a brand migration.
+
+**What changed:**
+- Product name, titles, meta tags, OG/Twitter cards, PWA manifest, and all
+  in-app UI copy updated from "FinFlow" to "Vyact".
+- `localStorage` key migration: new `vt_` prefix replaces legacy `ff_` prefix
+  with a transparent compatibility shim (`localStorageCompat.ts`). Existing user
+  data is preserved automatically — the shim reads `ff_*` keys on every get and
+  writes both `vt_*` (primary) and `ff_*` (legacy compat) on every set, giving a
+  90-day safety window before hard-cutting the old keys.
+- Export filenames: `finflow-backup-*.json` → `vyact-backup-*.json`,
+  `finflow-transactions-*.csv` → `vyact-transactions-*.csv`.
+- `VITE_APP_URL` → `https://vyact-twentyx.vercel.app` (consumer) /
+  `https://vyact-admin.vercel.app` (admin).
+- `X-Client-Info` header → `vyact/v7.0.0`.
+- `FinFlow App/` legacy spec folder removed from repo.
+- Repo renamed to `Vyact` on GitHub.
+- `CLAUDE.md`, `VERSIONS.md`, `DEPLOY.md`, `HANDOFF.md` updated.
+- `deploy.yml` deploy-comment updated to reference `vyact-twentyx.vercel.app`.
+
+**What was NOT changed (intentionally):**
+- Historical entries in `VERSIONS.md` are preserved as-is (brand evolution is
+  part of the company story; we add a new entry, we do not rewrite history).
+- Code-level `// FinFlow` comments in source files are cosmetic only (they carry
+  version history context) — being cleaned up progressively in subsequent PRs.
+- Supabase project ID unchanged (`dmxqkvploojokffuhxnz`).
+- No schema changes; no migration required.
+
+Build: `npm run lint` clean; `npm run build` succeeds; `dist/version.json` → `7.0.0`.
 
 ## v6.6.0 — Earnable Pulse Score + Google sign-in + reset-without-email *(2026-05-30)*
 
@@ -113,7 +147,7 @@ Fixes a production defect where the live consumer showed **dummy / seeded data w
 - **Definitive belt-and-braces fix:** `src/lib/supabase.ts` (and the admin client) now fall back to the public URL + publishable key **in production builds** (`import.meta.env.PROD`) when the env var is missing/empty. This is required because `vercel pull` writes an empty `.env.local` that Vite ranks *above* `.env.production`, so the committed file alone was still overridden on Vercel. With the PROD fallback, a build with **no env files at all** still embeds the project ref → the deployed app is always DB-connected. Local `npm run dev` stays local-only (fallback is PROD-gated) unless you provide `.env.local`.
 - Validated: a CI-equivalent build (no `.env.local`, no `.env.production`) embeds the Supabase project ref → connects to the real database.
 
-**Deploy hardening (process).** Documented the authoritative deploy flow in `DEPLOY.md`: every push to `main` runs `deploy.yml`; `db-migrations` is best-effort (`continue-on-error`) and the `consumer`/`admin` jobs run with `if: always()`, so a Supabase-auth hiccup never blocks a frontend release. Corrected the documented live URLs to the real Vercel production domains (`react-three-puce-61.vercel.app` / `admin-six-orpin-47.vercel.app`); flagged the orphaned `react-taupe-xi` / `finflow-admin` URLs.
+**Deploy hardening (process).** Documented the authoritative deploy flow in `DEPLOY.md`: every push to `main` runs `deploy.yml`; `db-migrations` is best-effort (`continue-on-error`) and the `consumer`/`admin` jobs run with `if: always()`, so a Supabase-auth hiccup never blocks a frontend release. Corrected the documented live URLs to the real Vercel production domains (`vyact-twentyx.vercel.app` / `vyact-admin.vercel.app`); flagged the orphaned `react-taupe-xi` / `finflow-admin` URLs.
 
 **In-app version note.** The current app version (from `package.json`, inlined at build time via a Vite `define` as `__APP_VERSION__`) now shows as a small sub-note at the bottom of the **Help & Guide** page.
 

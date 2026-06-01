@@ -60,7 +60,7 @@ export default function Onboarding() {
   return (
     <div className="fixed inset-0 z-[150] bg-bg overflow-y-auto">
       <div className="max-w-2xl mx-auto px-6 py-10">
-        <div className="display-italic text-3xl text-coral mb-1">FinFlow</div>
+        <div className="display-italic text-3xl text-coral mb-1">Vyact</div>
         <div className="font-mono text-[0.6rem] tracking-[0.18em] uppercase text-ink-dim mb-8">Step {step} of 4 · 90 seconds</div>
 
         {/* Progress bar */}

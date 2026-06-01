@@ -44,7 +44,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="display-italic text-3xl text-coral mb-2">FinFlow</div>
+          <div className="display-italic text-3xl text-coral mb-2">Vyact</div>
           <div className="mono-label">Checking your session…</div>
         </div>
       </div>

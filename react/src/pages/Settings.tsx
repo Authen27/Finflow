@@ -79,7 +79,7 @@ export default function Settings() {
     };
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `finflow-backup-${today()}.json`; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = `vyact-backup-${today()}.json`; a.click();
     URL.revokeObjectURL(url);
     toast('Backup downloaded', 'success');
   }
@@ -92,7 +92,7 @@ export default function Settings() {
     const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `finflow-transactions-${today()}.csv`; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = `vyact-transactions-${today()}.csv`; a.click();
     URL.revokeObjectURL(url);
     toast('CSV exported', 'success');
   }
@@ -348,7 +348,7 @@ export default function Settings() {
                   <button className="btn-primary" onClick={async () => {
                     setMfaEnrolling(true);
                     try {
-                      const enrolled = await enrollMfaTotp('FinFlow TOTP');
+                      const enrolled = await enrollMfaTotp('Vyact TOTP');
                       const otpauth = (enrolled as any)?.otpauth_url || (enrolled as any)?.otp_url || (enrolled as any)?.otpauth || null;
                       if (otpauth) setMfaQr(`https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(otpauth)}`);
                       setMfaFactorId((enrolled as any)?.id || (enrolled as any)?.factor_id || '');
@@ -432,6 +432,23 @@ export default function Settings() {
                 <div className="font-mono text-[0.62rem] tracking-wider text-ink-dim uppercase mt-0.5">{s.label}</div>
               </div>
             ))}
+          </div>
+        </Panel>
+
+        <Panel title="Legal & Policies">
+          <div className="p-5 grid sm:grid-cols-3 gap-3">
+            <Link to="/privacy" className="bg-bg3 border border-line rounded-md px-4 py-4 hover:border-coral/40 transition-colors">
+              <div className="text-sm font-semibold text-ink mb-1">Privacy Policy</div>
+              <div className="font-mono text-[0.6rem] tracking-wider text-ink-dim uppercase">Draft scaffold</div>
+            </Link>
+            <Link to="/terms" className="bg-bg3 border border-line rounded-md px-4 py-4 hover:border-coral/40 transition-colors">
+              <div className="text-sm font-semibold text-ink mb-1">Terms of Service</div>
+              <div className="font-mono text-[0.6rem] tracking-wider text-ink-dim uppercase">Draft scaffold</div>
+            </Link>
+            <Link to="/cookies" className="bg-bg3 border border-line rounded-md px-4 py-4 hover:border-coral/40 transition-colors">
+              <div className="text-sm font-semibold text-ink mb-1">Cookie Policy</div>
+              <div className="font-mono text-[0.6rem] tracking-wider text-ink-dim uppercase">Draft scaffold</div>
+            </Link>
           </div>
         </Panel>
 

@@ -103,7 +103,7 @@ export function AuthShell({ title, children }: { title: string; children: React.
     <div className="min-h-screen flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
         <Link to="/" className="block text-center mb-8">
-          <div className="display-italic text-4xl text-coral leading-none">FinFlow</div>
+          <div className="display-italic text-4xl text-coral leading-none">Vyact</div>
           <div className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-ink-dim mt-1.5">Family Finance OS</div>
         </Link>
         <div className="panel p-7">

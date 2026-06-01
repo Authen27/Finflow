@@ -156,17 +156,21 @@ async function openTxnModal(page) {
   // seed localStorage before the app boots on every document
   await page.evaluateOnNewDocument((s) => {
     const set = (k, v) => localStorage.setItem(k, JSON.stringify(v));
-    localStorage.setItem('ff_profiles_list', JSON.stringify([
-      { id:'local', name:'The Morgan Family', type:'family', baseCurrency:'USD', createdAt:new Date().toISOString() }]));
+    // Seed both new `vt_` keys and legacy `ff_` keys for compatibility.
+    const list = JSON.stringify([
+      { id:'local', name:'The Morgan Family', type:'family', baseCurrency:'USD', createdAt:new Date().toISOString() }]);
+    localStorage.setItem('ff_profiles_list', list);
+    localStorage.setItem('vt_profiles_list', list);
     localStorage.setItem('ff_active_profile', 'local');
-    set('ff_profile', s.profile);
-    set('ff_members', s.members);
-    set('ff_transactions', s.transactions);
-    set('ff_budgets', s.budgets);
-    set('ff_goals', s.goals);
-    set('ff_debts', s.debts);
-    set('ff_assets', s.assets);
-    set('ff_rates', s.rates);
+    localStorage.setItem('vt_active_profile', 'local');
+    set('ff_profile', s.profile); set('vt_profile', s.profile);
+    set('ff_members', s.members); set('vt_members', s.members);
+    set('ff_transactions', s.transactions); set('vt_transactions', s.transactions);
+    set('ff_budgets', s.budgets); set('vt_budgets', s.budgets);
+    set('ff_goals', s.goals); set('vt_goals', s.goals);
+    set('ff_debts', s.debts); set('vt_debts', s.debts);
+    set('ff_assets', s.assets); set('vt_assets', s.assets);
+    set('ff_rates', s.rates); set('vt_rates', s.rates);
   }, seed);
 
   // ── static shots ──

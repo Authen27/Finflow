@@ -24,7 +24,7 @@ const SECTIONS: Section[] = [
         </div>
       </div>
     ),
-    media: { src: '/help/getting-started.webp', alt: 'FinFlow dashboard overview' },
+    media: { src: '/help/getting-started.webp', alt: 'Vyact dashboard overview' },
   },
   {
     q: 'Adding transactions — types, payment methods & privacy',
@@ -39,7 +39,7 @@ const SECTIONS: Section[] = [
   {
     q: 'The Family Pulse Score',
     a: 'A single 0–100 health score from 5 components: Budget Compliance (25%), Savings Rate (25%), Goal Progress (15%), Expense Trend (15%), Debt Health (20%). Bands: Excellent ≥ 80 · Good ≥ 65 · Fair ≥ 45 · Needs Work below. It updates live as you add data.',
-    media: { src: '/help/pulse.webp', alt: 'Family Pulse Score gauge on the dashboard' },
+              media: { src: '/help/getting-started.webp', alt: 'Vyact dashboard overview' },
   },
   {
     q: 'Budgets & Goals',
@@ -48,12 +48,12 @@ const SECTIONS: Section[] = [
   },
   {
     q: 'Debt payoff & Net Worth',
-    a: 'Debts: add each balance, APR and minimum payment, then choose Avalanche (highest APR first — saves the most interest) or Snowball (smallest balance first — faster wins). FinFlow ranks them, shows months-to-payoff, and splits each recorded payment into interest vs principal. Net Worth: assets − liabilities, grouped by liquidity, with Liquidity, Debt-to-Asset, Emergency Coverage and Savings ratios.',
+    a: 'Debts: add each balance, APR and minimum payment, then choose Avalanche (highest APR first — saves the most interest) or Snowball (smallest balance first — faster wins). Vyact ranks them, shows months-to-payoff, and splits each recorded payment into interest vs principal. Net Worth: assets − liabilities, grouped by liquidity, with Liquidity, Debt-to-Asset, Emergency Coverage and Savings ratios.',
     media: { src: '/help/debt-networth.webp', alt: 'Debts page with payoff strategy' },
   },
   {
     q: 'Planner, Insights & Recurring',
-    a: 'Planner is a deterministic rules engine (no AI, no hallucination) that reviews your data and surfaces prioritised recommendations across Income, Expenses, Investments, Debt and Tax (Critical · Watch · Info). Insights is your reading list of articles published by the FinFlow team — search and favourite them. Recurring manages repeating transactions (weekly/monthly/yearly/custom) with auto-confirm or reminder lead-days.',
+    a: 'Planner is a deterministic rules engine (no AI, no hallucination) that reviews your data and surfaces prioritised recommendations across Income, Expenses, Investments, Debt and Tax (Critical · Watch · Info). Insights is your reading list of articles published by the Vyact team — search and favourite them. Recurring manages repeating transactions (weekly/monthly/yearly/custom) with auto-confirm or reminder lead-days.',
     media: { src: '/help/planner.webp', alt: 'Planner recommendations' },
   },
   {
@@ -141,11 +141,11 @@ export default function Help() {
       <div className="mt-8 text-center">
         <p className="text-[0.8rem] text-ink-dim">
           Something missing? Use the <span className="font-semibold text-ink">Planner</span> for personalised recommendations,
-          or <span className="font-semibold text-ink">Ask FinFlow</span> for AI-powered answers about your data.
+          or <span className="font-semibold text-ink">Ask Vyact</span> for AI-powered answers about your data.
         </p>
         {/* Version sub-note — sourced from package.json at build time */}
         <p className="num mt-3 font-mono text-[0.6rem] tracking-[0.12em] uppercase text-ink-dim">
-          FinFlow Consumer · v{__APP_VERSION__}
+                    Vyact Consumer · v{__APP_VERSION__}
         </p>
       </div>
     </div>

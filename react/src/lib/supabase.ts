@@ -1,4 +1,4 @@
-// FinFlow v4.1 — Supabase client
+// Vyact v7.0.0 — Supabase client
 //
 // Singleton client. Exports `supabase` (or null if not configured).
 // Use `isCloudEnabled()` to gate cloud-aware features so the app
@@ -36,7 +36,7 @@ export const APP_URL = (import.meta.env.VITE_APP_URL as string | undefined) || (
 export const isCloudEnabled = (): boolean => {
   const enabled = Boolean(URL && KEY);
   if (!enabled && typeof window !== 'undefined') {
-    console.warn('[FinFlow] Cloud not enabled. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local or Vercel env vars.');
+    console.warn('[Vyact] Cloud not enabled. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local or Vercel env vars.');
   }
   return enabled;
 };
@@ -53,7 +53,7 @@ export const supabase: SupabaseClient | null = isCloudEnabled()
       realtime: { params: { eventsPerSecond: 10 } },
       global: {
         headers: {
-          'X-Client-Info': `finflow/v6.4.9`,
+          'X-Client-Info': `vyact/v7.0.0`,
         },
       },
     })
@@ -67,28 +67,28 @@ export const supabase: SupabaseClient | null = isCloudEnabled()
 export function sb(): SupabaseClient {
   if (!supabase) {
     const msg = `
-[FinFlow Cloud Error]
-Cloud is not enabled. This likely means Supabase env vars were not set during build.
+  [Vyact Cloud Error]
+  Cloud is not enabled. This likely means Supabase env vars were not set during build.
 
-**FOR DEVELOPMENT:**
-1. Copy .env.example to .env.local
-2. Add your Supabase URL and anon key
-3. Run: npm run dev
+  **FOR DEVELOPMENT:**
+  1. Copy .env.example to .env.local
+  2. Add your Supabase URL and anon key
+  3. Run: npm run dev
 
-**FOR VERCEL DEPLOYMENT:**
-1. Go to Vercel Dashboard → Project → Settings → Environment Variables
-2. Add these variables (get values from https://supabase.com/dashboard):
-   - VITE_SUPABASE_URL=https://your-project.supabase.co
-   - VITE_SUPABASE_ANON_KEY=your-anon-key-here
-  - VITE_APP_URL=\${VERCEL_URL} or your custom domain
-3. Redeploy the project
-4. Check Supabase dashboard for CORS settings (allow your Vercel domain)
-5. Configure Auth Redirect URLs in Supabase
+  **FOR VERCEL DEPLOYMENT:**
+  1. Go to Vercel Dashboard → Project → Settings → Environment Variables
+  2. Add these variables (get values from https://supabase.com/dashboard):
+     - VITE_SUPABASE_URL=https://your-project.supabase.co
+     - VITE_SUPABASE_ANON_KEY=your-anon-key-here
+    - VITE_APP_URL=\${VERCEL_URL} or your custom domain
+  3. Redeploy the project
+  4. Check Supabase dashboard for CORS settings (allow your Vercel domain)
+  5. Configure Auth Redirect URLs in Supabase
 
-**FOR DEBUGGING:**
-- Check Vercel Deployment logs for env var warnings
-- Verify Supabase project is accessible and RLS policies are correct
-- Enable CORS for your deployment URL in Supabase dashboard
+  **FOR DEBUGGING:**
+  - Check Vercel Deployment logs for env var warnings
+  - Verify Supabase project is accessible and RLS policies are correct
+  - Enable CORS for your deployment URL in Supabase dashboard
     `.trim();
     throw new Error(msg);
   }

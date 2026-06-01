@@ -1,4 +1,4 @@
-// FinFlow Admin v8 — Households (live public.households + memberships)
+// Vyact Admin v8 — Households (live public.households + memberships)
 
 import { useEffect, useMemo, useState } from 'react';
 import { Home, RefreshCw } from 'lucide-react';

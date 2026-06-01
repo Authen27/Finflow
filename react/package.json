@@ -1,9 +1,9 @@
 {
-  "name": "finflow-react",
+  "name": "vyact-react",
   "private": true,
-  "version": "6.6.0",
+  "version": "7.0.0",
   "type": "module",
-  "description": "FinFlow — Family Finance OS · React + TypeScript + Recharts",
+  "description": "Vyact — Family Finance OS · React + TypeScript + Recharts",
   "scripts": {
     "dev": "vite",
     "build": "node check-env.js && tsc -b && vite build",

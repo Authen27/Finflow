@@ -59,7 +59,7 @@ export default function UpdateBanner() {
     >
       <RefreshCw size={18} className="text-coral flex-shrink-0" />
       <div className="flex-1 min-w-0 text-[0.84rem] text-ink leading-snug">
-        A new version of FinFlow (v{latest}) is available.
+        A new version of Vyact (v{latest}) is available.
         <span className="text-ink-dim"> Refresh to update.</span>
       </div>
       <button

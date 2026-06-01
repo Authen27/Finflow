@@ -16,7 +16,8 @@ import Chat    from '../../pages/Chat';
 
 type Tool = 'planner' | 'chat' | null;
 
-const KEY = 'ff_floating_last';
+import ls from '../../lib/localStorageCompat';
+const KEY = 'floating_last';
 
 export default function FloatingTools() {
   const [tool, setTool] = useState<Tool>(null);
@@ -31,7 +32,7 @@ export default function FloatingTools() {
 
   function open(t: Tool) {
     setTool(t);
-    try { if (t) localStorage.setItem(KEY, t); } catch { /* noop */ }
+    try { if (t) ls.setString(KEY, t); } catch { /* noop */ }
   }
 
   return (
@@ -48,7 +49,7 @@ export default function FloatingTools() {
           <Sparkles size={18} />
         </Fab>
         <Fab
-          label="Ask FinFlow"
+          label="Ask Vyact"
           tone="denim"
           onClick={() => open('chat')}
           active={tool === 'chat'}
@@ -58,7 +59,7 @@ export default function FloatingTools() {
       </div>
 
       {tool && (
-        <Drawer onClose={() => setTool(null)} title={tool === 'planner' ? 'Planner' : 'Ask FinFlow'}>
+        <Drawer onClose={() => setTool(null)} title={tool === 'planner' ? 'Planner' : 'Ask Vyact'}>
           {tool === 'planner' ? <Planner /> : <Chat />}
         </Drawer>
       )}

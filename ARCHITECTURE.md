@@ -1,4 +1,6 @@
-# FinFlow — Cloud, Auth & Multi-Household Architecture
+# Vyact — Cloud, Auth & Multi-Household Architecture
+
+> Note: This architecture doc header was updated to reflect the product rename from FinFlow to Vyact (2026-06-01). Historical mentions remain for traceability.
 
 > Design doc for migrating FinFlow from single-tenant `localStorage` to a multi-tenant cloud platform with proper authentication, multi-household membership, and offline-first sync.
 

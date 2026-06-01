@@ -1,0 +1,47 @@
+Rename audit (grep for "finflow", case-insensitive)
+Date: 2026-05-31
+Total matches found (grep cap): 200+ (see detailed matches in CI logs / automation-runs)
+
+Summary - high-level locations where "finflow" appears:
+- docs/: many files (TEST_SCENARIOS.md, TEST_GOVERNANCE.md, HANDOFF.md, ARCHITECTURE.md, COMMS_AUTO_LINKING_ROADMAP.md, ROADMAP_AUTO_LINKING.md, DEPLOY.md, DEPLOYMENT.md, etc.)
+- Root vanilla app: app.js (UI strings, help text, download/export filenames, window.FinFlowAdapters reference)
+- DB: db/schema.sql, db/MIGRATIONS.md, db/migrations-superseded/ (migration filenames include `finflow_*`)
+- CLAUDE.md and other top-level docs (mentions FinFlow in many sections)
+- .gitignore (FinFlow App/ entries)
+- admin/: many references including admin/index.html (title), admin/CHANGELOG.md, admin/.env.production, admin/eslint.config.js, admin/public/favicon.svg
+- admin built outputs: admin/dist/**, admin/.vercel/output/static/** and many JS/.map files contain hard-coded strings like "FinFlow", "finflow-admin", and `X-Client-Info: finflow-admin/v1.0.5`
+- deploy & CI artifacts: DEPLOY.md, DEPLOYMENT.md, workflows and deploy scripts reference `finflow` project and URLs (e.g., finflow.vercel.app, finflow-admin.vercel.app)
+- automation-runs/ and logs: package names and test-run outputs reference `finflow-react`, `finflow-admin` etc.
+
+Representative file list (partial, deduplicated):
+- docs/TEST_SCENARIOS.md
+- docs/TEST_GOVERNANCE.md
+- docs/HANDOFF.md
+- docs/COMMS_AUTO_LINKING_ROADMAP.md
+- DEPLOY.md
+- DEPLOYMENT.md
+- ARCHITECTURE.md
+- CLAUDE.md
+- VERSIONS.md (expect references)
+- app.js
+- .gitignore
+- db/schema.sql
+- db/MIGRATIONS.md
+- db/migrations-superseded/00000000000000_initial_schema.sql
+- admin/index.html
+- admin/CHANGELOG.md
+- admin/.env.production
+- admin/dist/** (bundled JS, maps, assets)
+- admin/.vercel/output/static/**
+- automation-runs/** (logs referencing finflow-*)
+
+Notes / next actions:
+- Many occurrences are in documentation and should be updated to Vyact where appropriate (preserve historical entries in VERSIONS.md).
+- The admin build artifacts (dist/.vercel) contain hard-coded strings; update source code, then rebuild admin to regenerate artifacts that contain the new brand.
+- DB migration names and schema comments include `finflow_` prefixes — plan for database renames or at least new migration names for Vyact.
+- Root `app.js` (v5) contains download filenames and localStorage/adapter references that must be changed; `window.FinFlowAdapters` must be renamed to `window.VyactAdapters` (or equivalent) and DataAdapter migration created.
+- Exports: CSV/JSON backup filenames must switch to `vyact-...`.
+
+File saved as: rename-audit.txt (repo root)
+
+--- End of audit summary ---

@@ -1,4 +1,4 @@
-// FinFlow Admin v8 — Users (live auth.users via admin_list_users RPC)
+// Vyact Admin v8 — Users (live auth.users via admin_list_users RPC)
 
 import { useEffect, useMemo, useState } from 'react';
 import { Mail, Shield, RefreshCw } from 'lucide-react';

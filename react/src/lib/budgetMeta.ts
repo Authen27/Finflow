@@ -21,16 +21,16 @@ interface Meta {
   periodStart?: string;
   periodEnd?: string;
 }
+import ls from './localStorageCompat';
 
-const KEY = 'ff_budget_periods';
+const KEY = 'budget_periods';
 
 function readAll(): Record<string, Meta> {
-  try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; }
-  catch { return {}; }
+  return ls.readJson<Record<string, Meta>>(KEY) || {};
 }
 
 function writeAll(map: Record<string, Meta>): void {
-  try { localStorage.setItem(KEY, JSON.stringify(map)); } catch { /* noop */ }
+  ls.setJson(KEY, map);
 }
 
 export function getBudgetMeta(id: string): Meta {

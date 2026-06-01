@@ -1,7 +1,7 @@
 // FinFlow v4.1 — LocalStorage → Cloud migration
 //
-// Existing v6/v7 users have data in localStorage under the legacy keys
-// (ff_transactions, ff_budgets, etc.). When they sign up, we offer to
+// Existing v6/v7 users have data in localStorage under legacy keys
+// (e.g. transactions, budgets, etc.). When they sign up, we offer to
 // push that data into a new cloud household so they don't lose anything.
 
 import type {
@@ -19,20 +19,19 @@ export interface LocalSnapshot {
   hasData: boolean;
 }
 
-const KEY = (suffix: string) => `ff_${suffix}`;
+import ls from './localStorageCompat';
 
-function readJson<T>(key: string, fallback: T): T {
-  try { return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback; }
-  catch { return fallback; }
+function readJsonPreferNew<T>(suffix: string, fallback: T): T {
+  return ls.readJson<T>(suffix) || fallback;
 }
 
 export function readLocalSnapshot(): LocalSnapshot {
-  const transactions = readJson<Transaction[]>(KEY('transactions'), []);
-  const budgets      = readJson<Budget[]>     (KEY('budgets'),      []);
-  const goals        = readJson<Goal[]>       (KEY('goals'),        []);
-  const members      = readJson<Member[]>     (KEY('members'),      []);
-  const debts        = readJson<Debt[]>       (KEY('debts'),        []);
-  const assets       = readJson<Asset[]>      (KEY('assets'),       []);
+  const transactions = readJsonPreferNew<Transaction[]>('transactions', []);
+  const budgets      = readJsonPreferNew<Budget[]>     ('budgets',      []);
+  const goals        = readJsonPreferNew<Goal[]>       ('goals',        []);
+  const members      = readJsonPreferNew<Member[]>     ('members',      []);
+  const debts        = readJsonPreferNew<Debt[]>       ('debts',        []);
+  const assets       = readJsonPreferNew<Asset[]>      ('assets',       []);
   const hasData = transactions.length + budgets.length + goals.length +
                   members.length + debts.length + assets.length > 0;
   return { transactions, budgets, goals, members, debts, assets, hasData };
@@ -62,9 +61,9 @@ export async function migrateLocalToCloud(
   for (const a of snap.assets)       await adapter.upsert('assets',       household.id, { ...a, id: undefined });
   // 3. Activate
   await adapter.setActiveHousehold(household.id);
-  // 4. Mark migrated so we don't prompt again
-  localStorage.setItem('ff_migrated_at', new Date().toISOString());
-  localStorage.setItem('ff_migrated_to', household.id);
+  // 4. Mark migrated so we don't prompt again (write both vt_ and legacy keys)
+  try { ls.setString('migrated_at', new Date().toISOString()); } catch { /* noop */ }
+  try { ls.setString('migrated_to', household.id); } catch { /* noop */ }
   return {
     householdId: household.id,
     counts: {
@@ -79,16 +78,16 @@ export async function migrateLocalToCloud(
 }
 
 export function hasBeenMigrated(): boolean {
-  return Boolean(localStorage.getItem('ff_migrated_at'));
+  try { return Boolean(ls.readString('migrated_at')); } catch { return false; }
 }
 
 // ────────────────────────────────────────────────────────────────
 // v6.4 — Automatic anon → cloud migration on first sign-in.
 //
 // Triggered by the store after a successful sign-in if (a) the user has
-// data in the anonymous (legacy `ff_*`) localStorage keys and (b) the
+// data in the anonymous legacy localStorage keys and (b) the
 // active cloud household is empty (no transactions/budgets/goals/etc.).
-// Idempotent via per-household local guard `ff_anon_migrated_<hid>`.
+// Idempotent via per-household local guard `anon_migrated_<hid>`.
 //
 // NOTE: This is best-effort and same-device only. A server-side marker
 // (households.extras.anon_migrated_at) is planned for a follow-up to
@@ -101,7 +100,7 @@ export interface AutoMigrationResult {
   counts?: MigrationResult['counts'];
 }
 
-const guardKey = (hid: string) => `ff_anon_migrated_${hid}`;
+const guardKey = (hid: string) => `anon_migrated_${hid}`;
 
 export async function autoMigrateAnonToHousehold(
   adapter: DataAdapter,
@@ -110,12 +109,12 @@ export async function autoMigrateAnonToHousehold(
   if (!householdId || householdId === 'local') {
     return { ran: false, reason: 'guard-set' };
   }
-  if (typeof localStorage !== 'undefined' && localStorage.getItem(guardKey(householdId))) {
+  if (ls.readString(guardKey(householdId))) {
     return { ran: false, reason: 'guard-set' };
   }
   const snap = readLocalSnapshot();
   if (!snap.hasData) {
-    try { localStorage.setItem(guardKey(householdId), '1'); } catch { /* noop */ }
+    try { ls.setString(guardKey(householdId), '1'); } catch { /* noop */ }
     return { ran: false, reason: 'no-anon-data' };
   }
   // Confirm the cloud household is genuinely empty before we duplicate
@@ -131,7 +130,7 @@ export async function autoMigrateAnonToHousehold(
   ]);
   const cloudHasData = txs.length + bs.length + gs.length + ms.length + ds.length + as_.length > 0;
   if (cloudHasData) {
-    try { localStorage.setItem(guardKey(householdId), '1'); } catch { /* noop */ }
+    try { ls.setString(guardKey(householdId), '1'); } catch { /* noop */ }
     return { ran: false, reason: 'household-not-empty' };
   }
   // Copy. We strip ids so the adapter mints fresh ones (avoids cross-tenant
@@ -142,7 +141,7 @@ export async function autoMigrateAnonToHousehold(
   for (const g of snap.goals)        await adapter.upsert('goals',        householdId, { ...g, id: undefined });
   for (const d of snap.debts)        await adapter.upsert('debts',        householdId, { ...d, id: undefined });
   for (const a of snap.assets)       await adapter.upsert('assets',       householdId, { ...a, id: undefined });
-  try { localStorage.setItem(guardKey(householdId), '1'); } catch { /* noop */ }
+  try { ls.setString(guardKey(householdId), '1'); } catch { /* noop */ }
   return {
     ran: true,
     reason: 'success',

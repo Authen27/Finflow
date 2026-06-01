@@ -110,14 +110,20 @@ export function seedScript(data: SeedData) {
   // when the household is not yet present means (a) seeded data still loads on
   // first boot, and (b) records the test ADDS during the run survive a reload
   // instead of being clobbered back to the seed on every page load.
-  if (localStorage.getItem('ff_active_profile')) return;
+  // If either legacy or new active_profile exists, skip seeding.
+  if (localStorage.getItem('ff_active_profile') || localStorage.getItem('vt_active_profile')) return;
 
+  // Persist both vt_ and ff_ keys so older bundles and new bundles both see the seed.
   localStorage.setItem('ff_active_profile', 'local');
+  localStorage.setItem('vt_active_profile', 'local');
   localStorage.setItem('ff_profiles_list', JSON.stringify([{
     id: 'local', name: 'My Household', type: 'family',
     baseCurrency: 'USD', createdAt: '2026-01-01T00:00:00.000Z',
   }]));
-  const w = (k: string, v: unknown) => localStorage.setItem('ff_' + k, JSON.stringify(v));
+  const w = (k: string, v: unknown) => {
+    localStorage.setItem('ff_' + k, JSON.stringify(v));
+    localStorage.setItem('vt_' + k, JSON.stringify(v));
+  };
   if (data.profile)      w('profile', data.profile);
   if (data.transactions) w('transactions', data.transactions);
   if (data.budgets)      w('budgets', data.budgets);

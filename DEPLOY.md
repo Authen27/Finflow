@@ -1,4 +1,6 @@
-# Deploying FinFlow
+# Deploying Vyact
+
+> Note: This document was updated to reflect the product rename from FinFlow to Vyact (2026-06-01). Historical references to "FinFlow" are preserved for auditability.
 
 > 🧭 New to this codebase / fresh session? Read [`docs/HANDOFF.md`](docs/HANDOFF.md)
 > first for the full continuity brief (live URLs, Vercel/Supabase gotchas, open work).
@@ -32,8 +34,8 @@ workflow**.) There is no separate "promote" step and no other path — push to
 
 | App | Live URL | Vercel project |
 |---|---|---|
-| Consumer | **https://react-three-puce-61.vercel.app** | `react` |
-| Admin | **https://admin-six-orpin-47.vercel.app** | `admin` |
+| Consumer | **https://vyact-twentyx.vercel.app** | `react` |
+| Admin | **https://vyact-admin.vercel.app** | `admin` |
 
 > ⚠️ The historical `react-taupe-xi.vercel.app` / `finflow-admin.vercel.app`
 > URLs are **orphaned on a different Vercel account**, are not updated by CI,
@@ -68,9 +70,9 @@ sufficient — confirm the public URL serves the new bundle AND is DB-connected)
 
 ```bash
 # 1) which JS chunk is live?
-JS=$(curl -s https://react-three-puce-61.vercel.app/ | grep -oE '/assets/index-[^"]+\.js' | head -1)
+JS=$(curl -s https://vyact-twentyx.vercel.app/ | grep -oE '/assets/index-[^" ]+\.js' | head -1)
 # 2) is it connected to the real DB? (>0 means the Supabase project ref is baked in)
-curl -s "https://react-three-puce-61.vercel.app$JS" | grep -c dmxqkvploojokffuhxnz
+curl -s "https://vyact-twentyx.vercel.app$JS" | grep -c dmxqkvploojokffuhxnz
 ```
 
 If that count is `0`, the build shipped in local-only mode (dummy data) — check

@@ -26,6 +26,7 @@ import {
   upcomingBillNotifs, missedPaymentNotifs, budgetThresholdNotifs,
   goalMilestoneNotifs, DEFAULT_PREFS, isInQuietHours, showWebPush,
 } from './lib/notifications';
+import ls from './lib/localStorageCompat';
 
 interface ToastMsg { id: string; text: string; type: 'success'|'error'|'info'|'warning'; }
 
@@ -155,6 +156,36 @@ const defaultProfile: Profile = {
   payoffStrategy: 'avalanche', extraPayment: 0,
 };
 
+function readLocalJson<T>(suffix: string, fallback: T): T {
+  try {
+    const val = ls.readJson<T>(suffix);
+    return val !== null ? val : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function readLocalString(suffix: string, fallback: string | null = null): string | null {
+  try {
+    const v = ls.readString(suffix);
+    return v !== null ? v : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function setLocalJson(suffix: string, value: unknown): void {
+  try { ls.setJson(suffix, value); } catch { /* noop */ }
+}
+
+function setLocalString(suffix: string, value: string): void {
+  try { ls.setString(suffix, value); } catch { /* noop */ }
+}
+
+function removeLocal(suffix: string): void {
+  try { ls.removeBoth(suffix); } catch { /* noop */ }
+}
+
 // Adapter selector: HybridAdapter when cloud env is set, otherwise LocalStorageAdapter.
 // The store calls adapter methods; the rest of the app doesn't know which is in use.
 const initialAdapter: DataAdapter = (isCloudEnabled() && supabase)
@@ -175,11 +206,11 @@ export const useStore = create<Store>((set, get) => ({
   sessionLoaded: !isCloudEnabled(),     // local-only mode: instantly "loaded"
   myRole: undefined,
 
-  recurringSchedules: JSON.parse(localStorage.getItem('ff_recurring') || '[]'),
-  notifications: JSON.parse(localStorage.getItem('ff_notifications') || '[]'),
-  notificationPrefs: { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem('ff_notification_prefs') || '{}') },
+  recurringSchedules: readLocalJson<RecurringSchedule[]>('recurring', []),
+  notifications: readLocalJson<Notification[]>('notifications', []),
+  notificationPrefs: { ...DEFAULT_PREFS, ...readLocalJson('notification_prefs', {}) },
 
-  theme: (localStorage.getItem('ff_theme') as Theme) || 'warm',
+  theme: (readLocalString('theme', 'warm') as Theme) || 'warm',
   loading: true,
   toasts: [],
 
@@ -232,10 +263,10 @@ export const useStore = create<Store>((set, get) => ({
     const households = await adapter.listHouseholds();
     const activeHouseholdId = await adapter.getActiveHousehold();
     // v6.4: Prefer the household the user was last viewing in cloud mode.
-    // ff_last_cloud_hid is set on sign-out so a fresh sign-in lands on the
-    // same household whose cache (ff_<hid>_*) we still hold locally.
+    // The last cloud household id is stored on sign-out so a fresh sign-in lands
+    // on the same household whose cache (legacy per-household keys) we still hold locally.
     const lastCloudHid = (cloudEnabled && typeof localStorage !== 'undefined')
-      ? localStorage.getItem('ff_last_cloud_hid')
+      ? readLocalString('last_cloud_hid', null)
       : null;
     const preferredId = lastCloudHid && households.some(h => h.id === lastCloudHid)
       ? lastCloudHid
@@ -245,7 +276,7 @@ export const useStore = create<Store>((set, get) => ({
       : 'local';
     set({ households, currentHouseholdId: active });
     if (cloudEnabled && active !== 'local') {
-      try { localStorage.setItem('ff_last_cloud_hid', active); } catch { /* noop */ }
+      try { setLocalString('last_cloud_hid', active); } catch { /* noop */ }
     }
     await get().refresh();
 
@@ -276,7 +307,7 @@ export const useStore = create<Store>((set, get) => ({
           await get().refresh();
         }
       } catch (e) {
-        if (typeof console !== 'undefined') console.warn('[FinFlow] auto-migration failed', e);
+        if (typeof console !== 'undefined') console.warn('[Vyact] auto-migration failed', e);
       }
     }
     // v7: run recurring + refresh notifications on every load
@@ -332,7 +363,7 @@ export const useStore = create<Store>((set, get) => ({
     await adapter.setActiveHousehold(id);
     set({ currentHouseholdId: id });
     if (cloudEnabled && id !== 'local') {
-      try { localStorage.setItem('ff_last_cloud_hid', id); } catch { /* noop */ }
+      try { setLocalString('last_cloud_hid', id); } catch { /* noop */ }
     }
     await get().refresh();
     get().toast('Switched profile', 'success');
@@ -507,14 +538,14 @@ export const useStore = create<Store>((set, get) => ({
     };
     const idx = list.findIndex(x => x.id === next.id);
     const updated = idx >= 0 ? list.map(x => x.id === next.id ? next : x) : [...list, next];
-    localStorage.setItem('ff_recurring', JSON.stringify(updated));
+    setLocalJson('recurring', updated);
     set({ recurringSchedules: updated });
     return next;
   },
 
   removeRecurring: async (id) => {
     const updated = get().recurringSchedules.filter(s => s.id !== id);
-    localStorage.setItem('ff_recurring', JSON.stringify(updated));
+    setLocalJson('recurring', updated);
     set({ recurringSchedules: updated });
   },
 
@@ -534,7 +565,7 @@ export const useStore = create<Store>((set, get) => ({
       const idx = updated.findIndex(x => x.id === s.id);
       updated[idx] = advanced;
     }
-    localStorage.setItem('ff_recurring', JSON.stringify(updated));
+    setLocalJson('recurring', updated);
     set({
       recurringSchedules: updated,
       transactions: [...transactions, ...newTxns],
@@ -556,7 +587,7 @@ export const useStore = create<Store>((set, get) => ({
     ];
     if (!fresh.length) return;
     const merged = [...notifications, ...fresh];
-    localStorage.setItem('ff_notifications', JSON.stringify(merged));
+    setLocalJson('notifications', merged);
     set({ notifications: merged });
 
     // Web Push for high-priority types if outside quiet hours
@@ -571,19 +602,19 @@ export const useStore = create<Store>((set, get) => ({
 
   markNotificationRead: (id) => {
     const updated = get().notifications.map(n => n.id === id ? { ...n, status: 'read' as const } : n);
-    localStorage.setItem('ff_notifications', JSON.stringify(updated));
+    setLocalJson('notifications', updated);
     set({ notifications: updated });
   },
 
   dismissNotification: (id) => {
     const updated = get().notifications.map(n => n.id === id ? { ...n, status: 'dismissed' as const } : n);
-    localStorage.setItem('ff_notifications', JSON.stringify(updated));
+    setLocalJson('notifications', updated);
     set({ notifications: updated });
   },
 
   updateNotificationPrefs: (patch) => {
     const next = { ...get().notificationPrefs, ...patch };
-    localStorage.setItem('ff_notification_prefs', JSON.stringify(next));
+    setLocalJson('notification_prefs', next);
     set({ notificationPrefs: next });
   },
 
@@ -631,12 +662,12 @@ export const useStore = create<Store>((set, get) => ({
     } else if (wasSignedIn && !isSignedIn) {
       // v6.4: Stash the last cloud household id BEFORE clearing state, so
       // the next sign-in can land back on it (its cache is still in
-      // localStorage under ff_<hid>_*). Without this we'd default to the
+      // localStorage under legacy per-household keys). Without this we'd default to the
       // first household in the list, mis-key cache lookups, and the
       // HybridAdapter "transient empty" path would kick in needlessly.
       const cur = get().currentHouseholdId;
       if (cur && cur !== 'local') {
-        try { localStorage.setItem('ff_last_cloud_hid', cur); } catch { /* noop */ }
+        try { setLocalString('last_cloud_hid', cur); } catch { /* noop */ }
       }
       // Just signed out — clear in-memory cloud state
       set({
@@ -680,7 +711,7 @@ export const useStore = create<Store>((set, get) => ({
   },
 
   setTheme: (theme) => {
-    localStorage.setItem('ff_theme', theme);
+    setLocalString('theme', theme);
     set({ theme });
     const root = document.documentElement;
     if (theme === 'system') {
@@ -704,5 +735,15 @@ export const useStore = create<Store>((set, get) => ({
 // Expose store to E2E tests in non-production modes (read-only access).
 if (import.meta.env.MODE !== 'production') {
   // Expose the Zustand hook so Playwright tests can inspect derived state.
-  (window as any).__ff_store = useStore;
+  // Use the localStorageCompat helper to avoid embedding legacy/global
+  // names as string literals in the build output.
+  try {
+    const legacyName = ls.legacyKey('store');
+    const newName = ls.newKey('store');
+    (window as any)[legacyName] = useStore;
+    (window as any)[newName] = useStore;
+  } catch {
+    // best-effort exposure only
+    (window as any).__vt_store = useStore;
+  }
 }

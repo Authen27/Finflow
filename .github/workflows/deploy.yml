@@ -94,7 +94,7 @@ jobs:
         id: deploy
         run: |
           # `vercel deploy --prod` promotes the build to THIS project's own
-          # production domain (react-three-puce-61.vercel.app), which Vercel
+          # production domain (vyact-twentyx.vercel.app), which Vercel
           # updates automatically — no manual alias step needed. (Note: the
           # historical react-taupe-xi.vercel.app URL lives on a *different*
           # Vercel account and is not reachable from this project's token.)

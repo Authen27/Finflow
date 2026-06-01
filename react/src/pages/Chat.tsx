@@ -7,6 +7,7 @@ import {
   buildSafeSummary, StubChatBackend, type ChatMessage,
 } from '../lib/aiSummary';
 import { logAiUsage } from '../lib/aiUsage';
+import ls from '../lib/localStorageCompat';
 
 const SUGGESTED = [
   'How much did I spend this month?',
@@ -31,7 +32,7 @@ export default function Chat() {
   const householdId = useStore(s => s.currentHouseholdId);
 
   const [history, setHistory] = useState<ChatMessage[]>(() => {
-    try { return JSON.parse(localStorage.getItem('ff_chat_history') || '[]'); }
+    try { return ls.readJson<ChatMessage[]>('chat_history') || []; }
     catch { return []; }
   });
   const [input, setInput] = useState('');
@@ -46,7 +47,7 @@ export default function Chat() {
   }, [txns, budgets, goals, debts, assets, profile, rates, members.length]);
 
   useEffect(() => {
-    localStorage.setItem('ff_chat_history', JSON.stringify(history));
+    ls.setJson('chat_history', history);
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [history]);
 
@@ -73,7 +74,7 @@ export default function Chat() {
   function clearHistory() {
     if (!confirm('Clear all chat history?')) return;
     setHistory([]);
-    localStorage.removeItem('ff_chat_history');
+    ls.removeBoth('chat_history');
   }
 
   return (

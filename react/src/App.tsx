@@ -31,6 +31,9 @@ const NetWorth     = React.lazy(() => import('./pages/NetWorth'));
 const Splits       = React.lazy(() => import('./pages/Splits'));
 const Help         = React.lazy(() => import('./pages/Help'));
 const Insights     = React.lazy(() => import('./pages/Insights'));
+const Privacy      = React.lazy(() => import('./pages/Privacy'));
+const Terms        = React.lazy(() => import('./pages/Terms'));
+const Cookies      = React.lazy(() => import('./pages/Cookies'));
 const E2EErrorTest = React.lazy(() => import('./pages/__e2e__ErrorTest'));
 
 const SignIn        = React.lazy(() => import('./pages/auth/SignIn'));
@@ -100,7 +103,7 @@ function AppShell() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="display-italic text-3xl text-coral mb-2">FinFlow</div>
+          <div className="display-italic text-3xl text-coral mb-2">Vyact</div>
           <div className="mono-label">Loading…</div>
         </div>
       </div>
@@ -132,6 +135,9 @@ function AppShell() {
           <Route path="/settings"     element={<Settings />} />
           <Route path="/help"         element={<Help />} />
           <Route path="/insights"     element={<Insights />} />
+          <Route path="/privacy"      element={<Privacy />} />
+          <Route path="/terms"        element={<Terms />} />
+          <Route path="/cookies"      element={<Cookies />} />
           <Route path="/__e2e_error"  element={<E2EErrorTest />} />
           <Route path="/onboarding"   element={<Onboarding />} />
           <Route path="*"             element={<Navigate to="/dashboard" replace />} />
@@ -146,7 +152,7 @@ function LoadingFallback() {
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
-        <div className="display-italic text-3xl text-coral mb-2">FinFlow</div>
+        <div className="display-italic text-3xl text-coral mb-2">Vyact</div>
         <div className="mono-label">Loading…</div>
       </div>
     </div>

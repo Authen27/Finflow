@@ -1,4 +1,4 @@
-// FinFlow Admin v8 — Auth gate
+// Vyact Admin v8 — Auth gate
 // Wraps the entire admin app. Three states:
 //   1. Loading (waiting on session check)
 //   2. Not signed in → render <SignIn />
@@ -60,7 +60,7 @@ function Loading() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <div className="display-serif text-3xl text-claude mb-2">FinFlow Admin</div>
+        <div className="display-serif text-3xl text-claude mb-2">Vyact Admin</div>
         <div className="font-mono text-[0.65rem] tracking-[0.18em] uppercase text-ink-dim">Checking session…</div>
       </div>
     </div>
@@ -99,8 +99,8 @@ function SignInPage() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-7">
-          <div className="display-serif text-3xl text-claude leading-none">FinFlow</div>
-          <div className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-ink-dim mt-1.5">Admin Console · v1.0.4</div>
+          <div className="display-serif text-3xl text-claude leading-none">Vyact</div>
+          <div className="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-ink-dim mt-1.5">Vyact Admin Console · v1.0.4</div>
         </div>
         <form onSubmit={onSubmit} className="panel p-6 space-y-3">
           <div>

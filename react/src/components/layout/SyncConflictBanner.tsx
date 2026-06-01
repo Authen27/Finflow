@@ -3,7 +3,8 @@
 // Surfaces the HybridAdapter's dead-letter conflict bucket as an in-app
 // banner. When another household member edits the same row concurrently,
 // the adapter rejects our write (the `updated_at` precondition no longer
-// matches), the op is moved to `ff_sync_conflicts`, and this banner tells
+// matches), the op is moved to `vt_sync_conflicts` (compat: legacy
+// `sync_conflicts` key is still honoured via `localStorageCompat`), and this banner tells
 // the user — instead of failing silently.
 //
 // Behaviour:

@@ -1,4 +1,4 @@
-// FinFlow Admin v8 — Content (real Supabase)
+// Vyact Admin v8 — Content (real Supabase)
 // Articles authored here surface in the consumer app at /insights for any
 // authenticated user as soon as status='published'.
 

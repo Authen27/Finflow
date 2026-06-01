@@ -2812,7 +2812,7 @@ function exportCSV() {
     const mem = getMember(t.memberId)?.name || '';
     return [t.date, t.type, `"${(t.description||'').replace(/"/g,'""')}"`, cat, t.amount.toFixed(2), t.currency || profile.baseCurrency, mem, `"${(t.note||'').replace(/"/g,'""')}"`, t.recurring || ''].join(',');
   });
-  downloadFile([header.join(','), ...rows].join('\n'), `finflow-transactions-${today()}.csv`, 'text/csv');
+  downloadFile([header.join(','), ...rows].join('\n'), `vyact-transactions-${today()}.csv`, 'text/csv');
   showToast('CSV exported', 'success');
 }
 
@@ -2830,7 +2830,7 @@ function exportBalanceSheet() {
   rows.push(`Total Assets,,,${totalAssets().toFixed(2)},${profile.baseCurrency}`);
   rows.push(`Total Liabilities,,,${totalLiabilities().toFixed(2)},${profile.baseCurrency}`);
   rows.push(`Net Worth,,,${netWorth().toFixed(2)},${profile.baseCurrency}`);
-  downloadFile(rows.join('\n'), `finflow-balance-sheet-${today()}.csv`, 'text/csv');
+  downloadFile(rows.join('\n'), `vyact-balance-sheet-${today()}.csv`, 'text/csv');
   showToast('Balance sheet exported', 'success');
 }
 
@@ -2841,7 +2841,7 @@ function downloadBackup() {
     profile, transactions, budgets, goals, members, debts, assets,
     exchangeRates,
   };
-  downloadFile(JSON.stringify(backup, null, 2), `finflow-backup-${today()}.json`, 'application/json');
+  downloadFile(JSON.stringify(backup, null, 2), `vyact-backup-${today()}.json`, 'application/json');
   localStorage.setItem(STORAGE_KEYS.lastBackup, new Date().toISOString());
   showToast('Backup downloaded', 'success');
   if (currentPage === 'settings') renderSettings();

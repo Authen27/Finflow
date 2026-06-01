@@ -1,11 +1,13 @@
-# FinFlow — Family Finance OS
+# Vyact — Family Finance OS
+
+> Note: This document was updated to reflect the product rename from FinFlow to Vyact (2026-06-01). Older references to "FinFlow" are intentionally preserved for historical context.
 
 ## Versioning at a glance
 
 Three deployables, each on its own SemVer line. Authoritative changelogs:
 - Master index: [`VERSIONS.md`](VERSIONS.md)
-- Consumer: [`react/CHANGELOG.md`](react/CHANGELOG.md) — **current v6.6.0**
-- Admin: [`admin/CHANGELOG.md`](admin/CHANGELOG.md) — **current v1.0.8**
+- Consumer: [`react/CHANGELOG.md`](react/CHANGELOG.md) — **current v7.0.0**
+- Admin: [`admin/CHANGELOG.md`](admin/CHANGELOG.md) — **current v1.1.0**
 - Database (Supabase): migrations are source of truth at [`supabase/migrations/`](supabase/migrations/); reconciled with prod (TD-20) — see [`db/MIGRATIONS.md`](db/MIGRATIONS.md)
 - Vanilla shell: legacy, **frozen at v5.0** — see master index
 
@@ -13,8 +15,8 @@ Three deployables, each on its own SemVer line. Authoritative changelogs:
 > live URLs, the Vercel/Supabase gotchas, how deploys really work, open work, and
 > the command cheatsheet. It's written to get a fresh context productive fast.
 
-**Live production (2026-05-30):** consumer **https://react-three-puce-61.vercel.app** ·
-admin **https://admin-six-orpin-47.vercel.app** (both on Vercel team `bhushandandolus-projects`).
+**Live production (2026-05-30):** consumer **https://vyact-twentyx.vercel.app** ·
+admin **https://vyact-admin.vercel.app** (both on Vercel team `bhushandandolus-projects`).
 The older `react-taupe-xi` / `finflow-admin` URLs are **orphaned on a different
 account** — do not use. Every push to `main` deploys (see [`DEPLOY.md`](DEPLOY.md)).
 
@@ -22,8 +24,8 @@ account** — do not use. Every push to `main` deploys (see [`DEPLOY.md`](DEPLOY
 Three parallel deliverables exist in this repo:
 
 - **Consumer (vanilla shell, legacy)** at the root — plain HTML+CSS+JS, no build step. Opens `index.html` directly. All v5.0 features fully working. **Frozen** as of consumer v6.0; superseded by the React port in `react/`.
-- **Consumer (React app)** in `react/` — Vite + React 18 + TypeScript + Tailwind + Recharts + Zustand. **Current v6.4.9**. Supabase cloud (auth, multi-household, invitations, realtime, content module) wired behind the `HybridAdapter`. Local-only mode still works without env vars. **Live (CI-deployed prod): https://react-three-puce-61.vercel.app** — this is the production URL of the `react` project under the `bhushandandolus-projects` Vercel team that `deploy.yml` ships to. ⚠ The older `react-taupe-xi.vercel.app` is **orphaned on a different Vercel account**, not updated by CI, and should not be relied on (it serves a stale build).
-- **Admin app** in `admin/` — separate Vite + React + TS app with **Claude native theme**. **Current v1.0.5**. Three role tiers (Super / Roles / Content). NorthStar dashboard with live KPIs from `admin_dashboard_kpis()` RPC. **Live (CI-deployed prod): https://admin-six-orpin-47.vercel.app** (the `admin` project under the same team). ⚠ The older `finflow-admin.vercel.app` is likewise orphaned on a different account.
+- **Consumer (React app)** in `react/` — Vite + React 18 + TypeScript + Tailwind + Recharts + Zustand. **Current v6.4.9**. Supabase cloud (auth, multi-household, invitations, realtime, content module) wired behind the `HybridAdapter`. Local-only mode still works without env vars. **Live (CI-deployed prod): https://vyact-twentyx.vercel.app** — this is the production URL of the `react` project under the `bhushandandolus-projects` Vercel team that `deploy.yml` ships to. ⚠ The older `react-taupe-xi.vercel.app` is **orphaned on a different Vercel account**, not updated by CI, and should not be relied on (it serves a stale build).
+- **Admin app** in `admin/` — separate Vite + React + TS app with **Claude native theme**. **Current v1.0.5**. Three role tiers (Super / Roles / Content). NorthStar dashboard with live KPIs from `admin_dashboard_kpis()` RPC. **Live (CI-deployed prod): https://vyact-admin.vercel.app** (the `admin` project under the same team). ⚠ The older `finflow-admin.vercel.app` is likewise orphaned on a different account.
 
 **Cloud is opt-in** — without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` env vars, the React app falls back to localStorage-only mode (single anonymous household, no auth screens). Both modes share the same `DataAdapter` interface.
 

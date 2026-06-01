@@ -14,6 +14,7 @@ import type {
 import {
   type DataAdapter, type Entity, LocalStorageAdapter,
 } from './dataAdapter';
+import ls from './localStorageCompat';
 import { SupabaseAdapter, ConcurrencyConflictError } from './supabaseAdapter';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -30,13 +31,13 @@ interface QueueOp {
    * TD-03 (PR #11) — when set, the upsert is performed as a guarded
    * UPDATE (`WHERE id = ? AND updated_at = expectedUpdatedAt`). If the
    * cloud row has been touched since the caller's read, the op is moved
-   * to `ff_sync_conflicts` instead of being silently dropped or retried.
+  * to `vt_sync_conflicts` (compat: legacy `sync_conflicts`) instead of being
+  * silently dropped or retried.
    */
   expectedUpdatedAt?: string;
 }
 
-const QUEUE_KEY = 'ff_sync_queue';
-const CONFLICT_KEY = 'ff_sync_conflicts';
+// queue/conflict keys are managed via localStorageCompat helper (vt_ / legacy prefix)
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -89,16 +90,13 @@ export class HybridAdapter implements DataAdapter {
     return cached;
   }
 
-  private syncedKey(entity: Entity, householdId: string): string {
-    return `ff_cloud_synced_${householdId}_${entity}`;
-  }
   private hasSynced(entity: Entity, householdId: string): boolean {
-    try { return localStorage.getItem(this.syncedKey(entity, householdId)) === '1'; }
-    catch { return false; }
+    try {
+      return ls.readString(`cloud_synced_${householdId}_${entity}`) === '1';
+    } catch { return false; }
   }
   private markSynced(entity: Entity, householdId: string): void {
-    try { localStorage.setItem(this.syncedKey(entity, householdId), '1'); }
-    catch { /* storage full — non-fatal */ }
+    try { ls.setString(`cloud_synced_${householdId}_${entity}`, '1'); } catch { /* noop */ }
   }
   private async applyCloudList(entity: Entity, householdId: string, cached: unknown[], fresh: unknown[]): Promise<void> {
     if (fresh.length > 0) {
@@ -116,7 +114,7 @@ export class HybridAdapter implements DataAdapter {
     // Defensive: cached has data, we've never seen a non-empty cloud
     // response for this (hid, entity). Treat as transient, keep cache.
     if (typeof console !== 'undefined') {
-      console.warn(`[FinFlow sync] Empty cloud response for ${entity}@${householdId}; keeping ${cached.length} cached rows. Use forceFullResync to override.`);
+      console.warn(`[Vyact sync] Empty cloud response for ${entity}@${householdId}; keeping ${cached.length} cached rows. Use forceFullResync to override.`);
     }
   }
 
@@ -126,7 +124,7 @@ export class HybridAdapter implements DataAdapter {
   forceFullResync(householdId: string): void {
     const entities: Entity[] = ['transactions','budgets','goals','debts','assets','members'];
     for (const e of entities) {
-      try { localStorage.removeItem(this.syncedKey(e, householdId)); } catch { /* noop */ }
+      try { ls.removeBoth(`cloud_synced_${householdId}_${e}`); } catch { /* noop */ }
     }
   }
 
@@ -192,16 +190,17 @@ export class HybridAdapter implements DataAdapter {
   async listHouseholds(): Promise<HouseholdMeta[]> {
     try {
       const cloud = await this.cloud.listHouseholds();
-      localStorage.setItem('ff_cloud_households', JSON.stringify(cloud));
+      try { ls.setJson('cloud_households', cloud); } catch { /* noop */ }
       return cloud;
     } catch {
-      return JSON.parse(localStorage.getItem('ff_cloud_households') || '[]');
+      try { return ls.readJson<HouseholdMeta[]>('cloud_households') || []; }
+      catch { return []; }
     }
   }
   async createHousehold(name: string, type: ProfileTypeKey, baseCurrency = 'USD'): Promise<HouseholdMeta> {
     const created = await this.cloud.createHousehold(name, type, baseCurrency);
     const list = await this.listHouseholds();
-    localStorage.setItem('ff_cloud_households', JSON.stringify([...list, created]));
+    ls.setJson('cloud_households', [...list, created]);
     return created;
   }
   async updateHousehold(id: string, patch: Partial<HouseholdMeta>): Promise<HouseholdMeta> {
@@ -221,14 +220,15 @@ export class HybridAdapter implements DataAdapter {
   private enqueue(op: QueueOp): void {
     const queue = this.readQueue();
     queue.push(op);
-    localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+    this.writeQueue(queue);
   }
   private readQueue(): QueueOp[] {
-    try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); }
-    catch { return []; }
+    try {
+      return ls.readJson<QueueOp[]>('sync_queue') || [];
+    } catch { return []; }
   }
   private writeQueue(q: QueueOp[]): void {
-    localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
+    try { ls.setJson('sync_queue', q); } catch { /* noop */ }
   }
 
   async flushQueue(): Promise<void> {
@@ -246,7 +246,7 @@ export class HybridAdapter implements DataAdapter {
         // flushing. We drop them with a warning rather than retain them.
         if (!isQueueOpIdValid(op)) {
           if (typeof console !== 'undefined') {
-            console.warn('[FinFlow sync] Dropping un-syncable queued op with non-UUID id', op.op, op.entity, (op.payload as { id?: string })?.id ?? op.id);
+            console.warn('[Vyact sync] Dropping un-syncable queued op with non-UUID id', op.op, op.entity, (op.payload as { id?: string })?.id ?? op.id);
           }
           continue;
         }
@@ -272,7 +272,7 @@ export class HybridAdapter implements DataAdapter {
           if (e instanceof ConcurrencyConflictError) {
             this.recordConflict(op);
             if (typeof console !== 'undefined') {
-              console.warn('[FinFlow sync] Concurrency conflict — op dead-lettered:', op.entity, e.id, 'expected', e.expectedUpdatedAt);
+              console.warn('[Vyact sync] Concurrency conflict — op dead-lettered:', op.entity, e.id, 'expected', e.expectedUpdatedAt);
             }
             continue;
           }
@@ -287,10 +287,9 @@ export class HybridAdapter implements DataAdapter {
 
   private recordConflict(op: QueueOp): void {
     try {
-      const raw = localStorage.getItem(CONFLICT_KEY);
-      const list: QueueOp[] = raw ? JSON.parse(raw) : [];
+      const list = ls.readJson<QueueOp[]>('sync_conflicts') || [];
       list.push(op);
-      localStorage.setItem(CONFLICT_KEY, JSON.stringify(list));
+      try { ls.setJson('sync_conflicts', list); } catch { /* noop */ }
     } catch { /* storage full — non-fatal */ }
   }
 
@@ -306,8 +305,8 @@ export class HybridAdapter implements DataAdapter {
    */
   pendingConflictCount(): number {
     try {
-      const raw = localStorage.getItem(CONFLICT_KEY);
-      return raw ? (JSON.parse(raw) as QueueOp[]).length : 0;
+      const list = ls.readJson<QueueOp[]>('sync_conflicts') || [];
+      return list.length;
     } catch { return 0; }
   }
 
@@ -317,6 +316,6 @@ export class HybridAdapter implements DataAdapter {
    * informed and (typically) re-applied any edits manually.
    */
   clearConflicts(): void {
-    try { localStorage.removeItem(CONFLICT_KEY); } catch { /* noop */ }
+    try { ls.removeBoth('sync_conflicts'); } catch { /* noop */ }
   }
 }

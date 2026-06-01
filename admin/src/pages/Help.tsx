@@ -1,4 +1,4 @@
-// FinFlow Admin v8 — Help / User Manual
+// Vyact Admin v8 — Help / User Manual
 // Per-tier guidance so Super, Roles, and Content admins know what they can do
 // and how to do it. Searchable accordion.
 

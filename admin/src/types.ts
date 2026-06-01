@@ -1,4 +1,4 @@
-// FinFlow Admin v8 — Types
+// Vyact Admin v8 — Types
 
 export type AdminRole = 'super' | 'roles' | 'content';
 export type UserStatus = 'active' | 'invited' | 'suspended' | 'churned';

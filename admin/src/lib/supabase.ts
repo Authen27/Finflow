@@ -1,4 +1,4 @@
-// FinFlow Admin v8 — Supabase client
+// Vyact Admin v1.1.0 — Supabase client
 // Same project as the consumer app. The admin's privileges are gated by the
 // `admin_roles` table (server-side RLS), not by env config — sign in is
 // identical to the consumer app's auth flow.
@@ -24,7 +24,7 @@ export const supabase: SupabaseClient | null = isCloudEnabled()
         detectSessionInUrl: true,
         flowType: 'pkce',
       },
-      global: { headers: { 'X-Client-Info': 'finflow-admin/v1.0.5' } },
+      global: { headers: { 'X-Client-Info': 'vyact-admin/v1.1.0' } },
     })
   : null;
 

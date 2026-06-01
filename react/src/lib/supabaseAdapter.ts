@@ -263,10 +263,13 @@ export class SupabaseAdapter implements DataAdapter {
   }
 
   async getActiveHousehold(): Promise<string> {
-    return localStorage.getItem('ff_active_profile') || (await this.listHouseholds())[0]?.id || '';
+    // Prefer vt_ active profile, fall back to the legacy active profile key. If neither exists, pick the first.
+    const lsRead = (await import('./localStorageCompat')).default.readString;
+    return lsRead('active_profile') || (await this.listHouseholds())[0]?.id || '';
   }
   async setActiveHousehold(id: string): Promise<string> {
-    localStorage.setItem('ff_active_profile', id);
+    const lsSet = (await import('./localStorageCompat')).default.setString;
+    lsSet('active_profile', id);
     return id;
   }
 

@@ -1,4 +1,4 @@
-// FinFlow Admin — Subscriptions (live public.subscriptions)
+// Vyact Admin — Subscriptions (live public.subscriptions)
 // The subscriptions table exists in production but is intentionally empty
 // until Stripe webhooks are wired in admin v1.1.0. This page reflects that
 // honestly: real query, real (zero) results, "billing not wired" callout.

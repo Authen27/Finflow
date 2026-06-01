@@ -10,7 +10,7 @@ const KEY = process.env.VITE_SUPABASE_ANON_KEY;
 const hasCloud = URL && KEY;
 
 if (!hasCloud) {
-  console.warn('\n⚠️  [FinFlow Build Warning]');
+  console.warn('\n⚠️  [Vyact Build Warning]');
   console.warn('VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY not set.');
   console.warn('App will run in localStorage-only mode (no cloud features).\n');
 

@@ -2,8 +2,7 @@
 // LocalStorageAdapter is the active impl; SupabaseAdapter is reserved
 // for the cloud phase. The interface lets us swap with one line in main.tsx.
 //
-// Backward-compat: anonymous-mode uses the legacy v4/v5 storage keys
-// (`ff_transactions`, `ff_budgets`, …) so existing data survives.
+// Backward-compat: anonymous-mode uses legacy v4/v5 storage keys so existing data survives.
 
 import type {
   Transaction, Budget, Goal, Member, Debt, Asset,
@@ -11,6 +10,7 @@ import type {
 } from '../types';
 import { DEFAULT_RATES } from '../constants';
 import { uid } from './format';
+import ls from './localStorageCompat';
 
 export type Entity = 'transactions' | 'budgets' | 'goals' | 'debts' | 'assets' | 'members';
 
@@ -53,26 +53,67 @@ export interface DataAdapter {
 const ANON = 'local';
 
 export class LocalStorageAdapter implements DataAdapter {
-  private key(suffix: string, householdId: string): string {
-    return householdId === ANON ? `ff_${suffix}` : `ff_${householdId}_${suffix}`;
+  constructor() {
+    // Run a one-time anon-key migration (legacy -> vt_) where appropriate.
+    // This is intentionally best-effort and idempotent.
+    try { this.migrateAnonKeys(); } catch { /* noop */ }
   }
+
   private read<T>(suffix: string, householdId: string, fallback: T): T {
-    try { return JSON.parse(localStorage.getItem(this.key(suffix, householdId)) ?? 'null') ?? fallback; }
-    catch { return fallback; }
+    try {
+      const key = householdId === ANON ? suffix : `${householdId}_${suffix}`;
+      const v = ls.readJson<T>(key);
+      return v !== null ? v : fallback;
+    } catch { return fallback; }
   }
   private write<T>(suffix: string, householdId: string, value: T): void {
-    localStorage.setItem(this.key(suffix, householdId), JSON.stringify(value));
+    try {
+      const key = householdId === ANON ? suffix : `${householdId}_${suffix}`;
+      ls.setJson(key, value);
+    } catch { /* noop */ }
+  }
+  private removeBoth(suffix: string, householdId: string): void {
+    try {
+      const key = householdId === ANON ? suffix : `${householdId}_${suffix}`;
+      ls.removeBoth(key);
+    } catch { /* noop */ }
+  }
+
+  // One-time migration for anonymous (local) keys from legacy -> vt_.
+  private migrateAnonKeys(): void {
+    try {
+      // Guard so we only attempt this once per device
+      try { if (ls.readString('migrated_v1') === '1') return; } catch { /* continue */ }
+      const anonKeys = [
+        'transactions','budgets','goals','members','debts','assets','rates','profile',
+        'profiles_list','active_profile','recurring','notifications','notification_prefs',
+        'theme','last_backup','chat_history','budget_periods'
+      ];
+      for (const s of anonKeys) {
+        try {
+          const nk = ls.newKey(s);
+          const lk = ls.legacyKey(s);
+          if (localStorage.getItem(nk) === null) {
+            const v = localStorage.getItem(lk);
+            if (v !== null) {
+              try { localStorage.setItem(nk, v); } catch { /* noop */ }
+            }
+          }
+        } catch { /* continue */ }
+      }
+      try { ls.setString('migrated_v1', '1'); } catch { /* noop */ }
+    } catch { /* noop */ }
   }
 
   // ── households ────────────────────────────────────────────────
   async listHouseholds(): Promise<HouseholdMeta[]> {
-    const list = JSON.parse(localStorage.getItem('ff_profiles_list') || 'null') as HouseholdMeta[] | null;
-    if (!list) {
+    const list = this.read<HouseholdMeta[]>('profiles_list', ANON, []);
+    if (!list || !Array.isArray(list) || list.length === 0) {
       const def: HouseholdMeta[] = [{
         id: ANON, name: 'My Household', type: 'family',
         baseCurrency: 'USD', createdAt: new Date().toISOString(),
       }];
-      localStorage.setItem('ff_profiles_list', JSON.stringify(def));
+      this.write('profiles_list', ANON, def);
       return def;
     }
     return list;
@@ -84,7 +125,7 @@ export class LocalStorageAdapter implements DataAdapter {
       name, type, baseCurrency, createdAt: new Date().toISOString(),
     };
     list.push(meta);
-    localStorage.setItem('ff_profiles_list', JSON.stringify(list));
+    this.write('profiles_list', ANON, list);
     return meta;
   }
   async updateHousehold(id: string, patch: Partial<HouseholdMeta>): Promise<HouseholdMeta> {
@@ -92,22 +133,23 @@ export class LocalStorageAdapter implements DataAdapter {
     const idx = list.findIndex(h => h.id === id);
     if (idx < 0) throw new Error('Household not found');
     list[idx] = { ...list[idx], ...patch };
-    localStorage.setItem('ff_profiles_list', JSON.stringify(list));
+    this.write('profiles_list', ANON, list);
     return list[idx];
   }
   async deleteHousehold(id: string): Promise<void> {
     if (id === ANON) throw new Error('Cannot delete the default profile');
     ['transactions','budgets','goals','members','debts','assets','rates','profile'].forEach(e =>
-      localStorage.removeItem(this.key(e, id))
+      this.removeBoth(e, id)
     );
     const list = (await this.listHouseholds()).filter(h => h.id !== id);
-    localStorage.setItem('ff_profiles_list', JSON.stringify(list));
+    this.write('profiles_list', ANON, list);
   }
   async getActiveHousehold(): Promise<string> {
-    return localStorage.getItem('ff_active_profile') || ANON;
+    try { const v = ls.readString('active_profile'); if (v) return v; } catch { /* noop */ }
+    return ANON;
   }
   async setActiveHousehold(id: string): Promise<string> {
-    localStorage.setItem('ff_active_profile', id);
+    try { ls.setString('active_profile', id); } catch { /* noop */ }
     return id;
   }
 

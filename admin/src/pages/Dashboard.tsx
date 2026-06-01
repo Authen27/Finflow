@@ -1,4 +1,4 @@
-// FinFlow Admin v8 — NorthStar Dashboard (live Supabase)
+// Vyact Admin v8 — NorthStar Dashboard (live Supabase)
 // Every number on this page is computed live by the admin_dashboard_kpis()
 // SQL function or the admin_weekly_trend(weeks) trend RPC. Where a metric
 // requires event tracking we don't have yet (D7/D90 retention, Pulse-improved%,

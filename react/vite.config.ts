@@ -13,7 +13,7 @@ export default defineConfig({
       // Emit dist/version.json so the running app can detect when a newer
       // build has been deployed (UpdateBanner polls it). Build-only; the dev
       // server won't serve it, and the banner degrades to a no-op there.
-      name: 'finflow-version-json',
+      name: 'vyact-version-json',
       generateBundle() {
         this.emitFile({
           type: 'asset',

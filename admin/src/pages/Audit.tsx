@@ -1,4 +1,4 @@
-// FinFlow Admin v8 — Audit Log (live public.activity_log)
+// Vyact Admin v8 — Audit Log (live public.activity_log)
 
 import { useEffect, useMemo, useState } from 'react';
 import { Shield, Download, RefreshCw } from 'lucide-react';

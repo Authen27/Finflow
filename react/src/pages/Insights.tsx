@@ -207,7 +207,7 @@ function Header({ t, count, favCount }: { t: (k: string) => string; count: numbe
       <div>
         <h1 className="display-italic text-4xl text-ink mb-1.5">{t('insights') || 'Insights'}</h1>
         <p className="font-mono text-[0.6rem] tracking-[0.14em] uppercase text-ink-dim">
-          {count} article{count === 1 ? '' : 's'} · {favCount} favorited · curated by FinFlow editorial
+          {count} article{count === 1 ? '' : 's'} · {favCount} favorited · curated by Vyact editorial
         </p>
       </div>
     </div>

@@ -1,4 +1,4 @@
-// FinFlow Admin v8 — Auth + admin role lookup
+// Vyact Admin v8 — Auth + admin role lookup
 // Sign-in is the same email/password flow as the consumer app. Privilege is
 // determined by the server-side admin_roles table (RLS-enforced).
 

@@ -1,4 +1,4 @@
-// FinFlow Admin v8 — Content CRUD against Supabase
+// Vyact Admin v8 — Content CRUD against Supabase
 // content_items rows authored here are surfaced to the consumer app's
 // Insights page for any user (RLS: anyone authenticated sees status='published').
 

@@ -54,7 +54,7 @@ export default function AcceptInvite() {
         <div className="text-center">
           <Mail size={48} className="mx-auto text-coral mb-4" />
           <p className="text-ink-mid mb-5">
-            You've been invited to join a household on FinFlow. Sign in or create an account to accept.
+            You've been invited to join a household on Vyact. Sign in or create an account to accept.
           </p>
           <div className="space-y-2.5">
             <Link to={`/auth/sign-in?next=/invite/${token}`}>

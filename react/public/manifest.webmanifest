@@ -1,7 +1,7 @@
 {
-  "name": "FinFlow",
-  "short_name": "FinFlow",
-  "description": "Family finance, planned together.",
+  "name": "Vyact",
+  "short_name": "Vyact",
+  "description": "Household finance, planned together.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FAF7F2",

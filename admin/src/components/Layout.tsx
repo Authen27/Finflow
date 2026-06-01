@@ -85,9 +85,9 @@ export default function Layout({ children }: { children: ReactNode }) {
             </svg>
             <div>
               <div className="text-lg leading-none" style={{ fontFamily: 'var(--ff-serif, Georgia)', fontWeight: 500, letterSpacing: '-0.015em' }}>
-                Fin<span style={{ fontStyle: 'italic', color: '#E26D5C' }}>Flow</span>
+                Vy<span style={{ fontStyle: 'italic', color: '#E26D5C' }}>act</span>
               </div>
-              <div className="font-mono text-[0.55rem] tracking-[0.18em] uppercase text-ink-dim mt-0.5">Admin · v1.0.5</div>
+                <div className="font-mono text-[0.55rem] tracking-[0.18em] uppercase text-ink-dim mt-0.5">Admin · v1.0.5</div>
             </div>
           </Link>
         </div>
@@ -149,7 +149,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <aside className="absolute left-0 top-0 bottom-0 w-64 bg-surface border-r border-line flex flex-col shadow-2">
             <div className="px-5 py-4 border-b border-line flex items-center justify-between">
               <div className="text-lg leading-none" style={{ fontFamily: 'var(--ff-serif, Georgia)', fontWeight: 500, letterSpacing: '-0.015em' }}>
-                Fin<span style={{ fontStyle: 'italic', color: '#E26D5C' }}>Flow</span>
+                Vy<span style={{ fontStyle: 'italic', color: '#E26D5C' }}>act</span>
                 <span className="font-mono text-[0.5rem] tracking-[0.16em] uppercase text-ink-dim ml-2">Admin</span>
               </div>
               <button onClick={() => setMobileNavOpen(false)} aria-label="Close menu" className="text-ink-mid hover:text-ink">
@@ -192,8 +192,8 @@ export default function Layout({ children }: { children: ReactNode }) {
               className="w-full bg-elev border border-line rounded-md pl-8 pr-3 py-1.5 outline-none focus:border-claude text-[0.84rem]"
             />
           </div>
-          <div className="hidden sm:block font-mono text-[0.6rem] tracking-[0.14em] uppercase text-ink-dim">
-            staging.finflow.app · admin
+            <div className="hidden sm:block font-mono text-[0.6rem] tracking-[0.14em] uppercase text-ink-dim">
+            staging.vyact.app · admin
           </div>
         </header>
 

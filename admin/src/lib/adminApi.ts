@@ -1,4 +1,4 @@
-// FinFlow Admin v8 — Data fetchers (live Supabase)
+// Vyact Admin v8 — Data fetchers (live Supabase)
 // Every page reads from this module. Mock data is gone.
 
 import { sb } from './supabase';

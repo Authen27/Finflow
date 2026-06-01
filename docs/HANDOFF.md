@@ -16,8 +16,8 @@
 
 | Deployable | Version | Live URL (authoritative) | Vercel project / team |
 |---|---|---|---|
-| Consumer (`react/`) | **v6.4.27** | https://react-three-puce-61.vercel.app | `react` · `bhushandandolus-projects` |
-| Admin (`admin/`) | **v1.0.8** | https://admin-six-orpin-47.vercel.app | `admin` · `bhushandandolus-projects` |
+| Consumer (`react/`) | **v6.4.27** | https://vyact-twentyx.vercel.app | `react` · `bhushandandolus-projects` |
+| Admin (`admin/`) | **v1.0.8** | https://vyact-admin.vercel.app | `admin` · `bhushandandolus-projects` |
 | Database (Supabase) | reconciled (TD-20) | project `dmxqkvploojokffuhxnz` (eu-west-2) | — |
 
 - **Consumer is DB-connected** (verified: the live JS bundle contains the
@@ -33,9 +33,9 @@
 ## 2. The gotchas that cause "context lag" (read these — they are non-obvious)
 
 ### 2a. Two different Vercel accounts are in play
-- **CI deploys** to the **`bhushandandolus-projects`** team (Vercel team id
+-- **CI deploys** to the **`bhushandandolus-projects`** team (Vercel team id
   `team_qk0fHaWkDdfdYKoEhqvx4TE9`). Its `react`/`admin` projects' production
-  URLs are `react-three-puce-61` / `admin-six-orpin-47`. **These are the real
+  URLs are `vyact-twentyx` / `vyact-admin`. **These are the real
   live URLs.**
 - **`react-taupe-xi.vercel.app` / `finflow-admin.vercel.app`** (what older docs
   called "live") are **orphaned on a different Vercel account** — CI cannot
@@ -128,7 +128,7 @@ Full register + remediation log: [`TECH_DEBT.md`](../TECH_DEBT.md). TD-01/03/04/
 - **Revoke the Supabase access token** that was pasted in chat earlier
   (https://supabase.com/dashboard/account/tokens) — the GitHub secret has its own
   copy. (If `supabase link` in CI starts failing, that's the token to refresh.)
-- **`react-taupe-xi` decision** still open: keep `react-three-puce-61` as canonical,
+- **`react-taupe-xi` decision** still open: keep `vyact-twentyx` as canonical,
   OR reclaim the pretty URL (needs the other Vercel account — user action).
 
 ---
@@ -142,8 +142,8 @@ node scripts/automation-run.mjs
 node scripts/db-migrations-check.mjs --fix && node scripts/db-migrations-check.mjs
 
 # ── Verify a deploy REALLY reached prod (green CI ≠ live)
-JS=$(curl -s https://react-three-puce-61.vercel.app/ | grep -oE '/assets/index-[^"]+\.js' | head -1)
-curl -s "https://react-three-puce-61.vercel.app$JS" | grep -c dmxqkvploojokffuhxnz   # >0 = DB-connected
+JS=$(curl -s https://vyact-twentyx.vercel.app/ | grep -oE '/assets/index-[^" ]+\.js' | head -1)
+curl -s "https://vyact-twentyx.vercel.app$JS" | grep -c dmxqkvploojokffuhxnz   # >0 = DB-connected
 
 # ── Read GitHub Actions status (no gh CLI; public REST API)
 curl -s "https://api.github.com/repos/Authen27/Finflow/actions/workflows/deploy.yml/runs?per_page=3" \
